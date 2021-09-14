@@ -58,9 +58,94 @@ let rec croissant liste =
 
 
 (* concaténer deux listes *)
-let concat l1 l2 = 
-    match l1 with 
-    | [] -> l2
-    | h :: t -> h :: (concat l1 l2)
+let rec concat l1 l2 = 
+  match l1 with 
+  | [] -> l2
+  | h :: t -> h :: (concat t l2)
 
   
+(* check if an element is in a list*)
+
+let rec mem elt lst = 
+  match lst with 
+      | [] -> false
+      | h :: t when h = elt -> true
+      | h :: t -> mem elt t
+  
+(* nth element of a list*)
+let nth lst n = 
+  let rec aux l i = 
+      match l with
+          | [] -> failwith "Out of range"
+          | h :: t when n = i -> h
+          | h :: t -> aux t (i+1)
+  in aux lst 0
+
+
+(* nth first elements of a list*)
+let rec take n lst =
+  match lst with
+      | [] when n != 0 -> lst
+      | [] -> []
+      | h :: t when n - 1 > 0 -> h :: (take (n-1) t)
+      | h :: t -> [h]
+
+
+(* range from a to b-1*)
+let rec range a b = 
+  if a = (b - 1) then (b-1) :: []
+  else a :: (range (a+1) b)
+
+(* miroir naif d'une liste*)
+
+let rec miroir_naif l = 
+  match l with 
+  | [] -> []
+  | h :: t -> concat (miroir_naif t) [h]
+
+
+(*rev append*)
+let rec rev_append l1 l2 = 
+  concat (miroir_naif l1) (miroir_naif l2)
+
+(* reverse a list *) 
+
+let rev lst =
+  let rec rev_append acc l =
+    match l with
+    | [] -> acc
+    | h::t -> rev_append (h::acc) t in
+  rev_append [] lst
+
+
+(* list.map*)
+let rec applique f lst = 
+  match lst with
+  | [] -> []
+  | h :: t -> (f h) :: applique f t
+
+(* somme des carrés d'une liste*)
+let liste_carres lst =
+  applique (fun x -> x*x) lst
+
+
+(*check if duplicates in a list*)
+let rec sans_doublons_triee lst = 
+    match lst with 
+    | [] -> true
+    | [x] -> true
+    | x :: y :: t -> if x == y then false else sans_doublons_triee (y::t)
+
+
+(*remove duplicates from a list*)
+let remove_dupl lst = 
+  let seen = Hashtbl.create (List.length lst) in 
+      List.filter (fun x -> let tmp = not(Hashtbl.mem seen x) in Hashtbl.replace seen x (); tmp) lst
+
+
+(* no duplicates next to each other*)
+let rec sans_doublons l = 
+  match l with
+  | [] -> true
+  | [x] -> true
+  | h :: y :: t -> if h = y then false else sans_doublons (y::t)
