@@ -58,10 +58,16 @@ let rec croissant liste =
 
 
 (* concaténer deux listes *)
-let rec concat l1 l2 = 
-  match l1 with 
-  | [] -> l2
-  | h :: t -> h :: (concat t l2)
+let concat t u= 
+match t with 
+| [] -> u
+| x :: xs -> x :: (concat xs u)
+
+(*reverse a list*)
+let rec miroir l =
+    match l with
+    | [] -> []
+    | h :: t -> concat (miroir t) [h]
 
   
 (* check if an element is in a list*)
@@ -136,13 +142,6 @@ let rec sans_doublons_triee lst =
     | [x] -> true
     | x :: y :: t -> if x == y then false else sans_doublons_triee (y::t)
 
-
-(*remove duplicates from a list*)
-let remove_dupl lst = 
-  let seen = Hashtbl.create (List.length lst) in 
-      List.filter (fun x -> let tmp = not(Hashtbl.mem seen x) in Hashtbl.replace seen x (); tmp) lst
-
-
 (* no duplicates next to each other*)
 let rec sans_doublons l = 
   match l with
@@ -168,3 +167,42 @@ let rec decompresse lst =
   match lst with
       | [] -> []
       | (elt,k) :: tail -> add_n_elt k elt (decompresse tail)
+
+  (*remove duplicates from a list*)
+  
+let rmv_dupl lst = 
+    let seen = Hashtbl.create (List.length lst) in
+    List.filter (fun x -> let tmp = not (Hashtbl.mem seen x) in
+                        Hashtbl.replace seen x ();
+                        tmp) lst
+  
+  
+(* index d'un element dans une liste*)
+let index k l = 
+    let rec aux lst i = 
+        match lst with 
+            | [] -> failwith "Element not found."
+            | h :: t when h = k -> i
+            | h :: t -> aux t (i+1)
+        in aux l 0
+  
+  
+(* DM début*)
+let nb_occs x u = 
+    let rec aux c l = 
+        match l with 
+            | [] -> c 
+            | h :: t when h = x -> aux (c+1) t
+            | h :: t -> aux c t
+    in aux 0 u
+  
+  
+let nb_distincts l = 
+    let seen = Hashtbl.create (List.length l) in
+    let rec aux lst c = 
+        match lst with 
+            | [] -> c
+            | h :: t when (Hashtbl.mem seen h) -> aux t c
+            | h :: t -> Hashtbl.replace seen h 0;aux t (c+1) 
+    in
+    aux l 0
