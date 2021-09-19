@@ -204,5 +204,56 @@ let nb_distincts l =
             | [] -> c
             | h :: t when (Hashtbl.mem seen h) -> aux t c
             | h :: t -> Hashtbl.replace seen h 0;aux t (c+1) 
-    in
-    aux l 0
+    in aux l 0
+
+let max_occs_triee l = 
+    let rec aux lst counter maxi prev_elt = 
+        match lst with
+            | [] -> maxi
+            | h :: t when h = prev_elt -> if (counter + 1) > maxi then aux t (counter + 1) (counter + 1) prev_elt else aux t (counter + 1) maxi prev_elt
+            | h :: t -> aux t 1 maxi h
+    in aux l 0 0 0
+
+  
+let nb_distincts_triee l =
+  let rec aux lst prev_elt counter =
+      match lst with 
+          | [] -> counter 
+          | h :: t when h = prev_elt -> aux t prev_elt counter
+          | h :: t -> aux t h (counter + 1)
+  in aux l 0 0
+
+let rec nb_condition predicat lst = 
+  match lst with
+      | [] -> 0
+      | h :: t when (predicat h) -> 1 + nb_condition predicat t
+      | h :: t -> nb_condition predicat t
+
+let somme_par_ligne tbl = 
+  let temp = (Array.make (Array.length tbl) 0) in
+  for i = 0 to ((Array.length tbl)-1) do
+      let counter = ref 0 in
+          for j = 0 to ((Array.length tbl.(i))-1) do
+              counter := !counter + tbl.(i).(j)
+          done;
+          temp.(i) <- !counter
+      done;
+  (temp)
+
+
+let somme_partielle tbl s e = 
+  if s >= e then failwith "IndexError" else 
+      let sum = ref 0 in
+          for i = (s - 1) to (e - 1) do
+              sum := !sum + tbl.(i)
+          done;
+      (!sum)
+
+let somme_max_rapide tbl = 
+  let maxi_ending_here = ref 0 in
+  let maxi_so_far = ref 0 in
+    for i = 0 to ((Array.length tbl) - 1) do
+        maxi_ending_here := maximum (!maxi_ending_here + tbl.(i)) 0;
+        maxi_so_far := maximum !maxi_ending_here !maxi_so_far;
+    done;
+  (!maxi_so_far)
