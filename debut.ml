@@ -249,6 +249,17 @@ let somme_partielle tbl s e =
           done;
       (!sum)
 
+
+let somme_max tbl =
+  let l = (Array.length tbl) in
+  let maxi = ref 0 in
+  for j = 0 to l do
+      for i = 1 to j do
+          maxi := maximum (somme_partielle tbl i j) !maxi;
+      done;
+  done;
+  (!maxi)
+  
 let somme_max_rapide tbl = 
   let maxi_ending_here = ref 0 in
   let maxi_so_far = ref 0 in
@@ -257,3 +268,4 @@ let somme_max_rapide tbl =
         maxi_so_far := maximum !maxi_ending_here !maxi_so_far;
     done;
   (!maxi_so_far)
+
