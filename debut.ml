@@ -269,3 +269,76 @@ let somme_max_rapide tbl =
     done;
   (!maxi_so_far)
 
+
+(*tp 21/09*)
+
+let maximum a b = if a > b then a else b
+let minimum a b = if a < b then a else b
+
+
+let extrema tbl = 
+  let maxi = ref (tbl.(0)) in
+  let mini = ref (tbl.(0)) in
+  for i = 0 to ((Array.length tbl) -1) do
+      maxi := maximum (tbl.(i)) !maxi;
+      mini := minimum (tbl.(i)) !mini
+  done;
+  (!mini,!maxi)
+
+(*occs of 0 to n of numbers in array*)
+let tab_occs tbl = 
+  let temp = (Array.make (Array.length tbl) 0) in
+  for i = 0 to ((Array.length tbl) - 1) do
+      temp.(i) <- nb_occs i tbl
+  done;
+  (temp)
+(*n carré*)
+
+(*même qu'avant mais en O(n)*)
+let tab_occs_eff tbl = 
+  let l = Array.length tbl in
+  let temp = (Array.make l 0) in
+  for i = 0 to (l-1) do
+      if tbl.(i) < (l - 1)
+      then temp.(tbl.(i)) <- temp.(tbl.(i)) + 1
+      else ();
+  done;
+  (temp)
+
+(*sommes cumulées*)
+let somme_cumulees tbl =
+  let l = (Array.length tbl) in
+  let temp = Array.make l 0 in
+  let so_far = ref 0 in
+  for i = 0 to (l-1) do
+      so_far := !so_far + tbl.(i);
+      temp.(i) <- !so_far;
+  done;
+  (temp)
+
+(*custom implementation if List.map*)
+let map predicat tbl =
+  let l = Array.length tbl in
+  for i = 0 to (l-1) do
+      tbl.(i) <- predicat tbl.(i)
+  done;
+  (tbl)
+
+(*custom implementation of List.init*)
+let init l predicat = 
+  let temp = Array.make l 0 in
+  for i = 0 to (l-1) do
+      temp.(i) <- predicat i
+  done;
+  (temp)
+
+(*custom implementation of Array.to_list*)
+let to_list tbl = 
+  let l = Array.length tbl in
+      let rec aux array counter = 
+          match counter with
+              |x when x = (l-1) -> [array.(l-1)]
+              | _ -> array.(counter) :: (aux array (counter + 1))
+      in aux tbl 0
+
+(*custom implementation of Array.of_list*)
