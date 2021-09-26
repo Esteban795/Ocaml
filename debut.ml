@@ -264,8 +264,8 @@ let somme_max_rapide tbl =
   let maxi_ending_here = ref 0 in
   let maxi_so_far = ref 0 in
     for i = 0 to ((Array.length tbl) - 1) do
-        maxi_ending_here := maximum (!maxi_ending_here + tbl.(i)) 0;
-        maxi_so_far := maximum !maxi_ending_here !maxi_so_far;
+        maxi_ending_here := max (!maxi_ending_here + tbl.(i)) 0;
+        maxi_so_far := max !maxi_ending_here !maxi_so_far;
     done;
   (!maxi_so_far)
 
@@ -341,4 +341,9 @@ let to_list tbl =
               | _ -> array.(counter) :: (aux array (counter + 1))
       in aux tbl 0
 
-(*custom implementation of Array.of_list*)
+(*custom implementation of flatten*)
+
+let rec flatten lst = 
+  match lst with
+      | [] -> []
+      | h :: t -> (@) h (flatten t)
