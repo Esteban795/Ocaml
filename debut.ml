@@ -395,6 +395,12 @@ let tri_insertion_tableau tbl =
 
 (*/////*)
 (*Keeps elt in memory, swaps everything to the right then puts the right element back in*)
+
+let echange t i j =
+  t.(i) <- t.(i) + t.(j);
+  t.(j) <- t.(i) - t.(j);
+  t.(i) <- t.(i) - t.(j);
+  
 let insertion_en_place tbl i = 
   let j = ref i in
   let elt = tbl.(i) in
