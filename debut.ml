@@ -347,3 +347,79 @@ let rec flatten lst =
   match lst with
       | [] -> []
       | h :: t -> (@) h (flatten t)
+
+
+(*td 28/09*)
+let cherche_dico t x =
+  let rec aux deb fin =
+      if deb >= fin then (Array.length t)
+      else
+          let milieu = ((deb+fin)/2) + in
+              if t.(milieu) = x then milieu
+              else if t.(milieu) < x then aux (milieu + 1) fin
+              else aux deb milieu
+      in aux 0 (Array.length t)
+
+
+let rec insere v x = 
+  match v with 
+      |[] -> [x]
+      |h :: t when h < x -> h :: (insere t x)
+      |h :: t ->  x :: h :: t
+
+let tri_insertion lst = 
+  let temp = ref [] in
+  let rec aux current_lst = 
+      match current_lst with
+          |[] -> !temp
+          |h :: t -> temp := insere !temp h;aux t
+  in aux lst
+
+let echange t i j =
+  t.(i) <- t.(i) + t.(j);
+  t.(j) <- t.(i) - t.(j);
+  t.(i) <- t.(i) - t.(j);
+
+let insertion_en_place tbl i = 
+  let j = ref i in
+  while !j > 0 && tbl.(!j) < tbl.(!j - 1) do
+      echange tbl !j (!j-1);
+      decr j
+  done; 
+
+let tri_insertion_tableau tbl = 
+  for j = 0 to (Array.length tbl) - 1 do
+      insertion_en_place tbl j
+  done;
+  (tbl)
+
+(*/////*)
+(*Keeps elt in memory, swaps everything to the right then puts the right element back in*)
+let insertion_en_place tbl i = 
+  let j = ref i in
+  let elt = tbl.(i) in
+  while !j > 0 && elt < tbl.(!j - 1) do
+      echange tbl !j (!j-1);
+      decr j
+  done; 
+  tbl.(!j) <- elt
+
+(*tri fusion*)
+let rec eclate lst = 
+  match lst with
+      |[] -> ([],[])
+      |[x] -> ([x],[])
+      |x :: y :: tail -> let a,b = eclate tail in (x :: a, y :: b)
+
+
+let rec fusion u v = 
+  match u,v with
+      | [],_ -> v
+      | _,[] -> u
+      |x :: xs,y :: ys -> if x <= y then x :: fusion xs v else y :: fusion u ys
+
+
+let rec tri_fusion t = 
+  match t with
+      | [] | [_] -> t
+      |_ -> let a,b = eclate t in fusion (tri_fusion a) (tri_fusion b)
