@@ -459,3 +459,52 @@ let nb_occs_triee elt tbl =
   let last_index = derniere_occ tbl elt in
   if first_index = -1 || last_index = -1 then failwith "Element not in the list."
   else (last_index - first_index) + 1
+
+
+  let fib_iter n = 
+    let n_2 = ref 0 in
+    let n_1 = ref 1 in
+    let sum = ref 0 in
+    for i = 2 to n do
+        sum := !n_2 + !n_1;
+        n_2 := !n_1;
+        n_1 := !sum;
+    done;
+    (!sum)
+(*invariant de boucle : n_1 + n_2 = n-ieme terme de la suite*)
+
+
+let fib_rec n =
+  if n = 0 then 0 else
+  let rec aux i f2 f1 =
+      if i = n then f1
+      else aux (i+1) f1 (f1 + f2)
+  in aux 1 0 1
+
+
+
+  let descending_order x y = if x > y then -1 else 1
+  let tri_decroissant lst = 
+    let temp = List.sort descending_order lst in
+    (temp)
+
+
+
+    let ab_float x y = if abs_float(x) < abs_float(y)  then -1 else 1
+    let tri_valeur_absolue lst = 
+      let temp = List.sort ab_float lst in
+      (temp)
+      let deuxieme_composante x y = if (snd x) <= (snd y) then -1 else 1
+      let tri_deuxieme_composante lst =
+        let temp = List.sort deuxieme_composante lst in
+        (temp)
+
+
+        let records predicat lst =
+          match lst with
+              |[]-> []
+              |x :: xs -> let rec aux max_so_far new_lst old_lst =
+                              match old_lst with
+                                  |[]-> new_lst
+                                  |x :: xs -> if (predicat x max_so_far) > 0 then aux x (x :: new_lst) xs else aux max_so_far new_lst xs
+                              in aux x [x] lst |> List.rev
