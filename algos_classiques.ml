@@ -1,3 +1,10 @@
+let miroir lst =
+  let rec aux acc l = 
+      match l with
+      | [] -> acc
+      | h :: t -> aux (h :: acc) t
+  in aux [] lst
+
 let binary_search t x =
   let rec aux deb fin =
       if deb >= fin then (Array.length t)
