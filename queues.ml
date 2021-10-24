@@ -45,3 +45,41 @@ let rec itere_file f file =
 let afficher file =
   itere_file (fun x -> print_newline (print_int x)) file;
   print_newline ()
+
+
+
+(*imperative and more efficient queue*)
+type 'a file_i = 
+    {donnees:'a option array;
+    mutable entree:int;
+    mutable sortie:int;
+    mutable cardinal:int}
+
+let new_queue n = {donnees=Array.make n None;entree= 1;sortie= 0;cardinal= n}
+
+let capacite_i q = Array.length q.donnees
+
+let queue_from_list lst = 
+  let l = List.length lst in
+  let arr = Array.make l (Some 0) in
+  let rec aux li i = 
+      match li with
+      |[] -> {donnees=arr;entree=(l-1);sortie=(l-1);cardinal=l}
+      |h :: t -> (arr.(i) <- Some h);aux t (i+1)
+  in aux lst 0
+
+let ajoute_i elt q =
+  if q.sortie = q.entree
+  then failwith "Insertion dans file pleine."
+  else
+      q.donnees.(q.entree) <- elt;
+      q.entree <- (q.entree + 1) mod q.cardinal;
+
+let enleve_i q =
+  if q.sortie = q.entree && q.donnees.(q.sortie) = None
+  then None
+  else
+      let temp = q.donnees.(q.sortie) in
+      q.donnees.(q.sortie) <- None;
+      q.sortie <- (q.sortie + 1) mod q.cardinal;
+      (temp)
