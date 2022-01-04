@@ -2,19 +2,12 @@ type ('a, 'b) arbre =
     Interne of 'a * ('a, 'b) arbre * ('a, 'b) arbre
   | Feuille of 'b
 
-Fonctions élémentaires
-Exercice 1
-
 let exemple1 =
-
   Interne (12,
-
            Interne (4,
-
                     Interne (7, Feuille 20, Feuille 30),
 
                     Interne (14, Feuille 1, Feuille 2)),
-
            Feuille 20)
 
 val exemple1 : (int, int) arbre =
@@ -24,22 +17,13 @@ val exemple1 : (int, int) arbre =
    Feuille 20)
 
 let exemple2 = 
-
     Interne(4,
-
         Feuille 0.3,
-
         Interne(1,
-
             Interne(8,
-
                 Interne (2,Feuille 2.5,Feuille 3.1),
-
                 Feuille 4.1),
-
             Feuille 0.2))
-
-            
 
 val exemple2 : (int, float) arbre =
   Interne (4, Feuille 0.3,
@@ -47,248 +31,80 @@ val exemple2 : (int, float) arbre =
     Interne (8, Interne (2, Feuille 2.5, Feuille 3.1), Feuille 4.1),
     Feuille 0.2))
 
-Exercice 2
-
 let rec hauteur arbre =
-
     match arbre with
-
     | Feuille v -> 0
-
     | Interne(v,g,d) -> 1 + max (hauteur g) (hauteur d)
 
-    
-
-val hauteur : ('a, 'b) arbre -> int = <fun>
-
-hauteur exemple2
-
-- : int = 4
-
 let rec taille arbre = 
-
     match arbre with
-
     | Feuille v -> 1
-
     |Interne(v,g,d) -> 1 + taille g + taille d
 
-val taille : ('a, 'b) arbre -> int = <fun>
-
 let rec dernier arbre = 
-
     match arbre with
-
     | Feuille v -> v
-
     | Interne(v,g,d) -> dernier d
 
-val dernier : ('a, 'b) arbre -> 'b = <fun>
-
-dernier exemple2
-
-- : float = 0.2
-
-Parcours d'arbres
-Exercice 3
-
-    Parcours en largeur :
-    Ordre préfixe :
-    Ordre infixe :
-    Ordre postfixe :
-
-Exercice 4
-
 let rec affiche_prefixe arbre = 
-
     match arbre with
-
     | Feuille v -> print_newline (print_int v)
-
     |Interne(v,g,d) -> print_newline (print_int v); affiche_prefixe g;affiche_prefixe d
 
-val affiche_prefixe : (int, int) arbre -> unit = <fun>
-
-affiche_prefixe exemple1
-
-12
-4
-7
-20
-30
-14
-1
-2
-20
-
-- : unit = ()
-
 let rec affiche_infixe arbre = 
-
     match arbre with
-
     | Feuille v -> print_newline (print_int v)
-
     |Interne(v,g,d) -> affiche_infixe g; print_newline (print_int v);affiche_infixe d
 
-val affiche_infixe : (int, int) arbre -> unit = <fun>
-
-affiche_infixe exemple1
-
-20
-7
-30
-4
-1
-14
-2
-12
-20
-
-- : unit = ()
-
 let rec affiche_postfixe arbre =
-
     match arbre with
-
     | Feuille v -> print_newline (print_int v)
-
     |Interne(v,g,d) -> affiche_postfixe g; affiche_postfixe d;print_newline (print_int v)
 
-val affiche_postfixe : (int, int) arbre -> unit = <fun>
-
-affiche_postfixe exemple1
-
-20
-30
-7
-1
-2
-14
-4
-20
-12
-
-- : unit = ()
-
-Exercice 5
-
 type ('a, 'b) token = 
-
   | N of 'a
-
   | F of 'b
 
 type ('a, 'b) token = N of 'a | F of 'b
 
 let rec postfixe_naif arbre = 
-
     match arbre with
-
     | Feuille v -> [F v]
-
     | Interne(v,g,d) -> postfixe_naif g @ postfixe_naif d @ [N v]
 
-val postfixe_naif : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
+(*Cette fonction risque d'être inefficace car...
 
-postfixe_naif exemple1
-
-- : (int, int) token list =
-[F 20; F 30; N 7; F 1; F 2; N 14; N 4; F 20; N 12]
-
-Cette fonction risque d'être inefficace car...
-
-Des concaténations en série de coût N
+Des concaténations en série de coût N*)
 
 let postfixe arbre = 
-
     let rec aux arbre valeurs = 
-
         match arbre with
-
         | Feuille v -> (F v) :: valeurs
-
         | Interne(v,g,d) -> aux g (aux d ((N v :: valeurs)))
-
     in aux arbre []
-
-    
-
 (*O(n)*)
 
-val postfixe : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
-
-postfixe exemple1
-
-- : (int, int) token list =
-[F 20; F 30; N 7; F 1; F 2; N 14; N 4; F 20; N 12]
-
 let prefixe arbre = 
-
     let rec aux arbre valeurs = 
-
         match arbre with
-
         | Feuille v -> (F v) :: valeurs
-
         | Interne(v,g,d) -> (N v) :: aux g (aux d valeurs)
-
     in aux arbre []
-
-val prefixe : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
-
-prefixe exemple1
-
-- : (int, int) token list =
-[N 12; N 4; N 7; F 20; F 30; N 14; F 1; F 2; F 20]
 
 let infixe arbre = 
-
     let rec aux arbre valeurs = 
-
         match arbre with
-
         | Feuille v -> (F v) :: valeurs
-
         | Interne(v,g,d) -> aux g ((N v) :: aux d valeurs)
-
     in aux arbre []
 
-val infixe : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
-
-infixe exemple1
-
-- : (int, int) token list =
-[F 20; N 7; F 30; N 4; F 1; N 14; F 2; N 12; F 20]
-
-Exercice 6
-
-​
-
 let postfixe_term arbre = 
-
     let rec aux foret valeurs = 
-
         match foret with
-
         | [] -> valeurs
-
         | Feuille v :: reste_foret -> aux reste_foret (F v :: valeurs)
-
         | Interne(v,g,d) :: reste_foret -> aux (d :: g :: reste_foret) (N v:: valeurs)
-
     in aux [arbre] []
-
-val postfixe_term : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
-
-postfixe_term exemple1
-
-- : (int, int) token list =
-[F 20; F 30; N 7; F 1; F 2; N 14; N 4; F 20; N 12]
-
-Exercice 7
-
-​
 
 (* 
 
@@ -314,125 +130,44 @@ Exercice 7
 
 *)
 
-​
-
 let largeur arbre = 
-
     let queue = Queue.create () in
-
     Queue.push arbre queue;
-
     let valeurs = ref [] in
-
     while not (Queue.is_empty queue) do
-
         match Queue.pop queue with
-
         |Feuille v -> valeurs := F v :: !valeurs
-
         |Interne(v,g,d) -> valeurs := N v :: !valeurs; Queue.push g queue; Queue.push d queue
-
     done;
-
     List.rev !valeurs
 
-val largeur : ('a, 'b) arbre -> ('a, 'b) token list = <fun>
-
-largeur exemple1
-
-Adressage
-Exercice 8
-Adresse 	Étiquette
-à compléter 	idem
-... 	...
-... 	...
-
 let rec lire_etiquette adresse arbre =
-
   match adresse,arbre with
-
   | [], Interne(v,g,d) -> N v
-
   |[],Feuille v -> F v
-
   |adresse :: reste_adresses, Interne(v,g,d) -> 
-
       if adresse then lire_etiquette reste_adresses d else lire_etiquette reste_adresses g
-
   |_ -> failwith "mauvaise adresse"
-
-val lire_etiquette : bool list -> ('a, 'b) arbre -> ('a, 'b) token = <fun>
-
-lire_etiquette [false;true;true] exemple1
-
-- : (int, int) token = F 2
 
 let rec incremente arbre adresse =
-
   match arbre,adresse with
-
   |Feuille v, [] -> Feuille (v + 1)
-
   |Interne(v,g,d),[] -> Interne(v + 1,g,d)
-
   |Interne(v,g,d), adresse :: reste_adresses -> 
-
       if adresse then incremente d reste_adresses else incremente g reste_adresses
-
   |_ -> failwith "mauvaise adresse"
 
-val incremente : (int, int) arbre -> bool list -> (int, int) arbre = <fun>
-
-incremente exemple1 []
-
-- : (int, int) arbre =
-Interne (13,
- Interne (4, Interne (7, Feuille 20, Feuille 30),
-  Interne (14, Feuille 1, Feuille 2)),
- Feuille 20)
-
 let affiche_avec_adresse (x, adresse) =
-
   List.iter (fun b -> print_int (if b then 1 else 0)) adresse;
-
   Printf.printf " : %i\n" x
 
-val affiche_avec_adresse : int * bool list -> unit = <fun>
-
 let tableau_adresses arbre =
-
   let rec aux temp arbre = 
-
       match arbre with
-
       | Feuille v -> affiche_avec_adresse (v,List.rev temp)
-
       | Interne(v,g,d) ->
-
           affiche_avec_adresse (v,List.rev temp);
-
           aux (false :: temp) g;
-
           aux (true :: temp) d
-
     in aux [] arbre;
-
     print_newline()
-
-val tableau_adresses : (int, int) arbre -> unit = <fun>
-
-tableau_adresses exemple1
-
- : 20
- : 12
-0 : 4
-00 : 7
-000 : 20
-001 : 30
-01 : 14
-010 : 1
-011 : 2
-1 : 20
-
-- : unit = ()
-
