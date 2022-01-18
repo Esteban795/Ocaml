@@ -15,3 +15,20 @@ let binom_it k n =
   else let temp = triangle n in temp.(n).(k)
 
 
+let nb_palindrome tbl length borne = 
+  let compteur = ref 0 in
+  for k = 0 to borne - length do
+      if is_palindromic tbl length k then compteur := !compteur + 1
+  done;
+  (!compteur)
+
+let is_palindromic tbl l b = 
+  let arr1 = Array.make l 0 in
+  let arr2 = Array.make l 0 in
+  for i = b to b + l - 1 do
+      arr1.(i - b) <- tbl.(i);
+      arr2.(i - b) <- tbl.(b + l -(i -b) - 1)
+  done;
+  (arr1 = arr2);
+
+(*118,120,1000*)
