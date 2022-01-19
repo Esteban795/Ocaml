@@ -224,22 +224,54 @@ let calculer_occurrences s =
    t
 
 let afficher_mots_contenus dict s = 
-   let rec aux dict prefixe occs = 
+   let occs = calculer_occurrences s in
+   let rec aux dict prefixe = 
       match dict with
       | V -> ()
-      |N('$',g,d) -> afficher (List.rev prefixe); aux d prefixe occs
+      |N('$',g,d) -> afficher (List.rev prefixe); aux d prefixe 
       |N(c,g,d) -> 
+         aux d prefixe;
          let i = int_of_char c in
-         if occs.(i) > 0 then occs.(i) <- occs.(i) - 1; aux g (c :: prefixe) occs 
-         else aux d prefixe occs
-   in dict [] (calculer_occurrences s)
+         if occs.(i) > 0 then 
+            occs.(i) <- occs.(i) - 1; 
+            aux g (c :: prefixe) occs;
+            occs.(i) <- occs.(i) + 1; 
+   in aux dict []
 
-   
-let afficher_anagrammes dict s = failwith "à implémenter"
+
+let check t = 
+   let len = Array.length t in
+   let i = ref 0 in
+   while !i < n && t.(!i) = 0 do
+      incr i;
+   done;
+   !i = n
+
+let afficher_anagrammes dict s = 
+   let occs = calculer_occurrences s in
+   let rec aux dict prefixe = 
+      match dict with
+      | V -> ()
+      |N('$',g,d) -> 
+         if check t then afficher (List.rev prefixe); aux d prefixe 
+      |N(c,g,d) -> 
+         aux d prefixe;
+         let i = int_of_char c in
+         if occs.(i) > 0 then 
+            occs.(i) <- occs.(i) - 1; 
+            aux g (c :: prefixe) occs;
+            occs.(i) <- occs.(i) + 1; 
+   in aux dict []
 
 (* Exercice 9 *)
 
-let filtrer_mots_contenus dict s = failwith "à implémenter"
+let filtrer_mots_contenus dict s = 
+   let occs = calculer_occurrences s in
+   let rec aux d = 
+      match d with
+      |V -> V 
+      |N('$',V,d) -> N('$',g,aux)
+
 
 let filtrer_mots_contenant dict s = failwith "à implémenter"
 
