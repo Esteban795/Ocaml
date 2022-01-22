@@ -174,7 +174,7 @@ let afficher_mots dict =
    let rec aux t prefixe = 
       match t with
       |V -> ()
-      |N('$',V,d) -> afficher (List.rev prefixe); afficher_mots d prefixe
+      |N('$',V,d) -> afficher (List.rev prefixe); aux d prefixe
       |N(c,g,d) -> aux g (c :: prefixe); aux d prefixe in
    aux dict []
 
@@ -187,8 +187,8 @@ let afficher_mots_longs dict n =
    let rec aux t prefixe len = 
       match t with
       |V -> ()
-      |N('$',V,d) -> if len >= n then afficher (List.rev prefixe); afficher_mots d prefixe len
-      |N(c,g,d) -> aux g (c :: prefixe) (len + 1); aux d prefixe in
+      |N('$',V,d) -> if len >= n then afficher (List.rev prefixe); aux d prefixe len
+      |N(c,g,d) -> aux g (c :: prefixe) (len + 1); aux d prefixe len in
    aux dict [] 0 
 
 (************)
@@ -205,6 +205,7 @@ let lire_fichier f =
          let line = input_line file in 
          dict := ajouter !dict (mot_of_string line)
       done;
+      V
    with
    |End_of_file -> !dict
 
@@ -218,10 +219,13 @@ let lire_fichier f =
 let calculer_occurrences s = 
    let t = Array.make 256 0 in
    let len = String.length s in
-   for i = 0 to l-1 do
+   for i = 0 to len-1 do
       t.(int_of_char s.[i]) <- t.(int_of_char s.[i]) + 1
    done;
    t
+
+(* Exercice 9 *)
+
 
 let afficher_mots_contenus dict s = 
    let occs = calculer_occurrences s in
@@ -232,20 +236,20 @@ let afficher_mots_contenus dict s =
       |N(c,g,d) -> 
          aux d prefixe;
          let i = int_of_char c in
-         if occs.(i) > 0 then 
+         if occs.(i) > 0 then begin
             occs.(i) <- occs.(i) - 1; 
-            aux g (c :: prefixe) occs;
+            aux g (c :: prefixe);
             occs.(i) <- occs.(i) + 1; 
-   in aux dict []
-
+        end in
+ aux dict []
 
 let check t = 
    let len = Array.length t in
    let i = ref 0 in
-   while !i < n && t.(!i) = 0 do
+   while !i < len && t.(!i) = 0 do
       incr i;
    done;
-   !i = n
+   !i = len
 
 let afficher_anagrammes dict s = 
    let occs = calculer_occurrences s in
@@ -253,24 +257,31 @@ let afficher_anagrammes dict s =
       match dict with
       | V -> ()
       |N('$',g,d) -> 
-         if check t then afficher (List.rev prefixe); aux d prefixe 
+         if check occs then afficher (List.rev prefixe); aux d prefixe 
       |N(c,g,d) -> 
          aux d prefixe;
          let i = int_of_char c in
          if occs.(i) > 0 then 
             occs.(i) <- occs.(i) - 1; 
-            aux g (c :: prefixe) occs;
+            aux g (c :: prefixe);
             occs.(i) <- occs.(i) + 1; 
    in aux dict []
-
-(* Exercice 9 *)
-
+   
 let filtrer_mots_contenus dict s = 
    let occs = calculer_occurrences s in
    let rec aux d = 
       match d with
       |V -> V 
-      |N('$',V,d) -> N('$',g,aux)
+      |N('$',V,d) -> N('$',V,aux d)
+      |N(c,g,d) -> 
+          let i = int_of_char c in
+          let d1 = aux d in
+          occs.(i) <- occs.(i) - 1;
+          let g1 = aux g in 
+          occs.(i) <- occs.(i) - 1;
+          if g1 = V then d1
+          else N(c,g1,d1)
+    in aux dict
 
 
 let filtrer_mots_contenant dict s = failwith "à implémenter"
