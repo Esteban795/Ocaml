@@ -52,13 +52,11 @@ let eval_post u =
       |_,_ -> failwith "raté"
   in aux u []
 
-
-
 let arbre_of_post expr = 
   let rec aux expr pile = 
     match expr, pile with
     |[], [x] -> x
     |Val x :: xs, _ -> aux xs (C x :: pile)
-    |Op op :: xs, dr :: ga :: reste_pile ->aux xs (N(op, ga, dr) :: reste_pile)
+    |Op op :: xs, dr :: ga :: reste_pile -> aux xs (N(op, ga, dr) :: reste_pile)
     | _ -> failwith "expression incorrecte" 
   in aux expr []

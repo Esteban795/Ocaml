@@ -1,6 +1,6 @@
 type ('a, 'b) arbre =
-    Interne of 'a * ('a, 'b) arbre * ('a, 'b) arbre
-  | Feuille of 'b
+    |Interne of 'a * ('a, 'b) arbre * ('a, 'b) arbre
+    | Feuille of 'b
 
 let exemple1 =
   Interne (12,
@@ -10,7 +10,7 @@ let exemple1 =
                     Interne (14, Feuille 1, Feuille 2)),
            Feuille 20)
 
-val exemple1 : (int, int) arbre =
+val exemple1 arbre =
   Interne (12,
    Interne (4, Interne (7, Feuille 20, Feuille 30),
     Interne (14, Feuille 1, Feuille 2)),
@@ -25,7 +25,7 @@ let exemple2 =
                 Feuille 4.1),
             Feuille 0.2))
 
-val exemple2 : (int, float) arbre =
+val exemple2 arbre =
   Interne (4, Feuille 0.3,
    Interne (1,
     Interne (8, Interne (2, Feuille 2.5, Feuille 3.1), Feuille 4.1),
@@ -170,4 +170,23 @@ let tableau_adresses arbre =
           aux (false :: temp) g;
           aux (true :: temp) d
     in aux [] arbre;
-    print_newline()
+    print_newline ()
+
+
+let lire_postfixe parcours = 
+    let rec aux pile p = 
+        match pile,p with
+        |_, F x :: xs -> aux (Feuille x :: pile) xs
+        |d :: g :: reste_pile, N x :: xs -> aux ( Interne (x,g,d) :: reste_pile) xs
+        |[arbre], [] -> arbre
+        |_ -> failwith "mauvais parcours"
+    in aux [] parcours
+
+let lire_prefixe parcours = 
+    let rec aux pile p = 
+        match pile,p with
+        |_, F x :: xs -> aux (Feuille x :: pile) xs
+        |g :: d :: reste_pile, N x :: xs -> aux ( Interne (x,g,d) :: reste_pile) xs
+        |[arbre], [] -> arbre
+        |_ -> failwith "mauvais parcours"
+    in aux [] (List.rev parcours)
