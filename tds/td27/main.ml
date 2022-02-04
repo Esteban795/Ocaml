@@ -166,4 +166,22 @@ let rec remove cle dict =
   |Node (g,k,v,d) ->
       let cle_min,val_min,d_next = extrait_min_dict d in
       Node(g,cle_min,val_min,d_next)
-                                            
+
+let get_occurences dict elt = 
+  match get elt dict with
+  |None -> 0
+  |Some i -> i
+
+let add_occurences dict elt = 
+  let i = get_occurences dict elt in
+  set elt (i + 1) dict
+
+let remove_occurences dict elt =
+  let i = get_occurences dict elt in
+  if i = 1 then remove elt dict
+  else set elt (i - 1) dict
+  
+let rec size dict = 
+  match dict with
+  |Empty -> 0
+  |Node(left,_,valuation,right) -> valuation + size left + size right
