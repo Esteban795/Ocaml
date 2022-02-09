@@ -185,3 +185,55 @@ let rec size dict =
   match dict with
   |Empty -> 0
   |Node(left,_,valuation,right) -> valuation + size left + size right
+
+
+type 'a multiset =
+  |Empty
+  |Node of int * 'a multiset * 'a * int * 'a multiset
+
+
+
+let rec get_occurences_2 t elt = 
+  match t with
+  |Empty -> 0
+  |Node (_,g,y,i,d) ->
+      if y = elt then i
+      else if elt < y then get_occurences_2 g elt
+      else get_occurences_2 d elt
+
+let rec add_occurences_2 t elt = 
+  match t with
+  |Empty -> Node(1,Empty,elt,1,Empty)
+  |Node (n,g,y,i,d) ->
+      if elt = y then Node (n + 1,g,y, i + 1,d)
+      else if elt < y then Node (n + 1,add_occurences_2 g elt,y,i,d)
+      else Node (n + 1,g,y,i,add_occurences_2 d elt)
+
+let rec aux t elt = 
+  match t  with
+  |Empty -> Empty
+  |Node (n,g,y,i,d) when elt < y -> Node (n - 1,aux g elt,y,i,d)
+  |Node (n,g,y,i,d) when elt > y -> Node (n - 1,g,y,i,aux d elt)
+  |Node(n,Empty,y,i,t') | Node(n,t',y,i,Empty) -> t'
+  |Node(n,g,y,i,d) -> let m,i_m,d' = extrait_min d in 
+      Node (n - 1,g,m,i_m,d')
+  |Node(n,g,y,i,d) -> Node(n - 1,g,y, i - 1,d)
+  
+let rem_occurences_2 t elt = 
+  if get_occurences_2 t elt = 0 then t
+  else aux t elt
+
+let size t = 
+  match t with
+  |Empty -> 0
+  |Node(n,_,_,_,_) -> n
+
+
+let rec select t index = 
+  match t with
+  |Empty -> failwith "invalid index"
+  |Node (n,g,y,i,d) ->
+      let size_g = size g in
+      if index < size_g then select g index
+      else if index < size_g + i then y
+      else select d (index - size_g - i)
