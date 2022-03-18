@@ -1,3 +1,11 @@
+(*Objectif : 
+- somme maximale en prenant uniquement un élément de chaque ligne et de chaque colonne.
+Si on prend un élément à la ligne j et à la colonne i, on a pas le droit de prendre le prochain élément
+sur la ligne i et dans la colonne j
+
+Relation de récurrence 
+*)
+
 let m1 = [|
  [|7;  53; 183; 439; 863 |];
  [|497; 383; 563;  79; 973 |];
@@ -24,12 +32,12 @@ let m2 = [|
  [|813;883;451;509;615; 77;281;613;459;205;380;274;302; 35;805|];
 |]
 
-let rec range a b = 
+let rec range a b =   (*Generates [a, a + 1... b - 1]*)
   if a >= b then []
   else a :: range (a + 1) b
 
-let rec prive_de arr elt = 
-  match arr with
+let rec prive_de lst elt =  (*Removes first occurence of elt from arr*)
+  match lst with
   |[] -> []
   |h :: t -> if h = elt then t else h :: (prive_de t elt)
 
@@ -40,6 +48,7 @@ let rec max_liste lst =
   |x :: xs -> max x (max_liste xs)
 
 
+(*Solution naïve*)
 let rec eval matrix s =
   let i = List.length s in
   if i = 0 then 0
