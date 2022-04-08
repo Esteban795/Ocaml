@@ -28,7 +28,7 @@ let floyd_warshall g =
   (dist,next)
 
 
-
+(*Tree must be in the form of `next` matrix (see above)*)
 let rec rebuild tree x y = 
   if x = y then [x]
   else 
