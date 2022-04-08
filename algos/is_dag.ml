@@ -3,7 +3,7 @@ exception Cycle
 
 
 (* g is an adjacency list *)
-let dfs g =
+let is_dag g =
   let n = Array.length g in
   let seen = Array.make n Unknown in 
   let rec explore v = 
