@@ -9,6 +9,10 @@ sig
   val make_empty : int -> t
   val decrease_priority : t -> (int * float) -> unit
   val mem : t -> int -> bool
+  val parent : int -> int
+  val left : int -> int
+  val right : int -> int
+  
 end = struct
 
   type t =
@@ -18,7 +22,11 @@ end = struct
      mapping : int array}
 
   let length q = q.last + 1
-
+  
+  let parent i = (i - 1)/2
+  let left i = 2 * i + 1
+  let right i = 2 * i + 2
+  
   let capacity q = Array.length q.keys
 
   let make_empty n =
@@ -65,13 +73,13 @@ end = struct
     let mini = ref i in
     if left i <= q.last && q.priorities.(left i) < q.priorities.(i) then
         mini := left i;
-    if right i <= q.last && q.priorities.(right i) < q.priorities.(i) then
+    if right i <= q.last && q.priorities.(right i) < q.priorities.(!mini) then
         mini := right i;
-    if !mini != i then begin
+    if !mini <> i then begin
         full_swap q i !mini;
         sift_down q !mini
     end
-    
+
 
   let extract_min q = 
     if q.last < 0 then failwith "file vide"
@@ -93,33 +101,6 @@ end = struct
 end
 
 
-type weighted_graph = (int * float) list array
-
-let g0 : weighted_graph =
-  [| [(1, 15.); (2, 16.); (3, 13.); (4, 9.)];
-     [(0, 15.); (4, 7.); (5, 1.)];
-     [(0, 16.); (3, 5.); (4, 5.); (5, 6.)];
-     [(0, 13.); (2, 5.); (4, 3.)];
-     [(0, 9.); (1, 7.); (2, 5.); (3, 3.)];
-     [(1, 1.); (2, 6.)] |]
-
-let random_graph n avg_outdegree =
-  Random.init 0;
-  let weight () = Random.float 100. in
-  let build_adj i =
-    let rec aux j =
-      if j = n then
-        []
-      else if (i <> j) && Random.int (n - 1) < avg_outdegree then
-        (j, weight ()) :: aux (j + 1)
-      else aux (j + 1) in
-    aux 0 in
-  Array.init n build_adj
-
-let g1 = random_graph 20 2
-
-let g2 = random_graph 1000 10
-
 
 
 let dijkstra g x0 = 
@@ -127,16 +108,150 @@ let dijkstra g x0 =
   let dist = Array.make n infinity in
   let q = PrioQ.make_empty n in
   PrioQ.insert q (x0,0.);
-  dist.(x0) <- 0;
-  while PrioQ.length != 0 then begin
+  dist.(x0) <- 0.;
+  while PrioQ.length q <> 0 do 
       let (j,d) = PrioQ.extract_min q in
       let update (k,y) = 
-          let new_dist = d + x in
+          let new_dist = d +. y in
           if new_dist < dist.(k) then begin
               dist.(k) <- new_dist;
-              if PrioQ.mem  k then PrioQ.decrease_priority q (k, new_dist)
+              if PrioQ.mem q k then PrioQ.decrease_priority q (k, new_dist)
               else PrioQ.insert q (k,new_dist)
-            end in 
-      List.iter updage g.(j)
+          end in
+      List.iter update g.(j)
   done;
   dist
+
+
+
+let dijkstra_tree g x0 =
+  let n = Array.length g in
+  let tree = Array.make n None in 
+  let dist = Array.make n infinity in
+  let q = PrioQ.make_empty n in
+  PrioQ.insert q (x0,0.);
+  dist.(x0) <- 0.;
+  tree.(x0) <- Some x0;
+  while PrioQ.length q <> 0 do 
+      let (j,d) = PrioQ.extract_min q in
+      let update (k,y) = 
+          let new_dist = d +. y in
+          if new_dist < dist.(k) then begin
+              dist.(k) <- new_dist;
+              tree.(k) <- Some j;
+              if PrioQ.mem q k then PrioQ.decrease_priority q (k, new_dist)
+              else PrioQ.insert q (k,new_dist)
+          end in
+      List.iter update g.(j)
+  done;
+  dist,tree
+
+
+let reconstruct_path p goal = 
+  let rec aux current =
+      match p.(current) with
+      |None -> failwith "pas de chemin"
+      |Some i when i = current -> [current]
+      |Some i -> current :: aux i in 
+  List.rev (aux goal)
+
+
+type commune =
+{id : int;
+  insee : string;
+  nom : string;
+  pop : int;
+  dep : string}
+
+
+let lire_communes nom_fichier = 
+  let f = open_in nom_fichier in
+  let lst = ref [] in
+  try
+      let premiere_ligne = input_line f in
+      while true do 
+          let line = input_line f in
+          let fmt id insee nom pop dep = {id;insee;nom;pop;dep} in
+          let obj = Scanf.sscanf line "%d@;%s@;%s@;%d@;%s@" fmt in
+          lst := obj :: !lst
+      done;
+      assert false
+  with
+  |End_of_file -> close_in f; Array.of_list (List.rev !lst)
+
+
+
+let lire_graphe nb_communes fichier_adjacence = 
+  let tab_sommets = Array.make nb_communes [] in 
+  let file = open_in fichier_adjacence in
+  try
+      let premiere_ligne = input_line file in 
+      while true do 
+          let line = input_line file in 
+          let fmt source dest = 
+              (source,dest) in
+          let x,y = Scanf.sscanf line "%d@;%d@" fmt in
+          tab_sommets.(x) <- y :: tab_sommets.(x);
+          tab_sommets.(y) <- x :: tab_sommets.(y)
+      done;
+      assert false
+  with
+  |End_of_file -> close_in file;
+
+
+let tab_communes = lire_communes "communes.csv"
+
+let g_adj = lire_graphe 35847 "./adjacences.csv"
+
+let affiche chemin =
+  let affiche_commune i =
+    let c = tab_communes.(i) in
+    Printf.printf "%s (%s) : %d\n" c.nom c.dep c.pop in
+  List.iter affiche_commune chemin
+
+
+
+exception Trouve
+
+let saute_canton init = 
+    let graphe = g_adj in
+    let communes = tab_communes in
+    let n = Array.length graphe in
+    let vus = Array.make n false in 
+    let tree = Array.make n None in
+    let queue = Queue.create () in 
+    Queue.add init queue;
+    vus.(init) <- true;
+    try
+        while not(Queue.is_empty queue) do
+            let elt = Queue.pop queue in
+            if communes.(i).pop >= 50000 then raise (Trouve elt);
+            let rec ajouter s = 
+                if not vus.(s) then begin
+                    vus.(s) <- true;
+                    Queue.add j queue;
+                    tree.(s) <- Some i end in 
+            List.iter ajouter g.(i)
+        done;
+        []
+    with
+        |Trouve i -> reconstruct_path tree i
+
+
+
+let commune_la_plus_paumee g communes = 
+  let max_dist = ref 0 in 
+  let longest_path = ref [] in
+  let n = Array.length g in 
+  for i = 0 to n - 1 do
+      let chemin = saute_canton i in 
+      let len_chemin = List.length chemin in
+      if len_chemin > max_dist then begin
+          longest_path := chemin;
+          max_dist := len_chemin;
+      end
+  done;
+  affiche communes !longest_path
+(*Q19 : sommet x et y reliés, l'arc reliant x et y a le poids de la population de y*)
+
+
