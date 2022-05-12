@@ -196,12 +196,12 @@ let lire_graphe nb_communes fichier_adjacence =
       done;
       assert false
   with
-  |End_of_file -> close_in file;
+  |End_of_file -> close_in file
 
 
-let tab_communes = lire_communes "communes.csv"
+let tab_communes = lire_communes "communes.csv";;
 
-let g_adj = lire_graphe 35847 "./adjacences.csv"
+let g_adj = lire_graphe 35847 "./adjacences.csv";;
 
 let affiche chemin =
   let affiche_commune i =
@@ -212,7 +212,6 @@ let affiche chemin =
 
 
 exception Trouve
-
 let saute_canton init = 
     let graphe = g_adj in
     let communes = tab_communes in
@@ -252,6 +251,46 @@ let commune_la_plus_paumee g communes =
       end
   done;
   affiche communes !longest_path
+
+
+
 (*Q19 : sommet x et y reliés, l'arc reliant x et y a le poids de la population de y*)
 
 
+let dico_communes () = 
+  let dict = Hashtbl.create 40000 in 
+  for i = 0 to Array.length (tab_communes) - 1 do
+      if Hashtbl.mem dict (c.nom,c.dep) then failwith "doublon"
+      else Hashtbl.add dict (c.nom, c.dep) c
+  done;
+  dict
+
+
+let dico_communes () = 
+  let dict = Hashtbl.create 40000 in 
+  for i = 0 to Array.length (tab_communes) - 1 do
+      if Hashtbl.mem dict (c.nom,c.dep) then failwith "doublon"
+      else Hashtbl.add dict (c.nom, c.dep) c
+  done;
+  dict
+
+let generer_graphe () = 
+  let length = Array.length tab_communes in 
+  let g = Array.make length [] in 
+  let arc x y = 
+      g.(x) <- (y,tab_communes.(y).pop) :: g.(x) in
+  for i = 0 to length - 1 do
+      List.iter (arc i) g_adj.(i)
+  done;
+  g
+
+let misanthrope x y = 
+  let dict_communes = dico_communes () in
+  let g = generer_graphe () in
+  let depart = Hashtbl.find dict_communes x in 
+  let arrivee = Hashtbl.find dict_communes y in 
+  let a,tree = dijkstra_tree g depart.id in reconstruct_path tree arrivee.id
+
+
+let () = 
+  misanthrope "Villeurbanne" "La Mulatière"
