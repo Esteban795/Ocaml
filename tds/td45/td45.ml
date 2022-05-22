@@ -70,6 +70,77 @@ let foret s =
   List.rev !lst_temp
 
 
+  let left i = 2 * i + 1
+let right i = 2 * i + 2
+let up i = (i - 1) / 2
+
+module PrioQ :
+sig
+  type t
+  val extract_min : t -> (arbre_code * int)
+  val insert : t -> (arbre_code * int) -> unit
+  val length : t -> int
+  val of_list : (arbre_code * int) list -> t
+end = struct
+
+  type t =
+    {mutable last : int;
+      keys : (arbre_code * int) array}
+
+  let length q = q.last + 1
+
+  let swap t i j =
+    let tmp = t.(i) in
+    t.(i) <- t.(j);
+    t.(j) <- tmp
+
+  (* Attention, les indices correspondent bien aux clés *)
+  let rec sift_up q i =
+    let up = up i in
+    if i > 0 && snd q.keys.(i) < snd q.keys.(up) then begin
+      swap q.keys i up;
+      sift_up q up
+    end
+
+  (* Bien vérifier la capacité du tableau + faire le changement d'indice avant le sift_up *)
+  let insert q x =
+    let i = q.last + 1 in
+    q.keys.(i) <- x;
+    q.last <- i;
+    sift_up q i
+
+  let of_list t =
+    let queue = {
+      last = -1 ;
+      keys = Array.make (List.length t) (F '\n', 0)
+    } in
+    List.iter (fun x -> insert queue x) t;
+    queue
+
+  let rec sift_down q i =
+    let l = left i in
+    let r = right i in
+    let i_min = ref i in
+
+    if l <= q.last && snd q.keys.(l) < snd q.keys.(!i_min) then i_min := l;
+    if r <= q.last && snd q.keys.(r) < snd q.keys.(!i_min) then i_min := r;
+
+    if !i_min <> i then begin
+      swap q.keys i !i_min;
+      sift_down q !i_min
+    end
+
+  let extract_min q =
+    if q.last < 0 then failwith "vide";
+
+    let (min, min_prio) = q.keys.(0) in
+    swap q.keys 0 q.last;
+    q.last <- q.last - 1;
+    sift_down q 0;
+    min, min_prio
+end
+
+
 let huffman s = 
   let prioq = PrioQ.of_list (foret s) in (*techniquement, il faudrait réadapter la PrioQ du td42, mais j'ai la flemme*)
   while PrioQ.length prioq > 1 do
