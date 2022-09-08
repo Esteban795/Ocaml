@@ -1,6 +1,29 @@
+2.4
+
 1) w(.*)q
 2)(i.*){6,}
 3) ([aeiouy].*){10,}
 4)^p([aeiouy].*){9,}
 5)^([^aei]{12})$
-6)
+6)^((s.?)*|(.?s)*)$
+7) ^(.{5,})\1$
+
+
+-----------------------------------------------------------------
+
+
+2.5
+
+1) grep -E "the" moby_dick.txt  | wc --lines
+2) grep -E "the.*the" moby_dick.txt  | wc --lines
+3) grep -oE "the" moby_dick.txt  | wc --lines
+4)Compte le nombre de ligne suivie d'aucun caractère alphanumérique => compte en tout le nombre de "the" dans le texte
+5) grep -oE "(\W|^)the\W.*\Wthe(\W|$)" moby_dick.txt  | wc --lines
+
+
+------------------------------------------------------------------
+
+2.6
+
+1) grep -E -o '[aeiouy]+' francais.txt | sort | uniq -u
+2) grep -E -o '\w{15,}' moby_dick.txt | sort | uniq -i | wc --lines
