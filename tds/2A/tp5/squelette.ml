@@ -270,39 +270,74 @@ let delta_set automate set letter =
   new_set
 
 let has_accepting_state automate set = 
-  let final = automate.final in 
+  let final = automate.accepting in 
+  let check = ref false in 
   let n = Array.length set in 
   for i = 0 to n - 1 do
-    if final.(i) && automate.(i) then true
+    if final.(i) && set.(i) then check := true
   done;
+  !check
 
 let nfa_accept automate lst = 
-  let n = Array.length automate.final in 
+  let n = Array.length automate.accepting in
   let rec app_delta_star set word = 
     match word with 
-    | [] -> set
-    | x :: xs ->
+    |[] -> set
+    |x :: xs ->
         let new_set = delta_set automate set x in 
         app_delta_star new_set xs in 
-  let init = Array.make n false in
+  let init = Array.make n false 
   in init.(0) <- true;
-  let final = app_delta_star init lst in 
-  has_accepting_state automate final
-
-  
+  let f = app_delta_star init lst in 
+  has_accepting_state automate f
 
 let build_set nfa lst letter = 
   let n = Array.length nfa.delta in 
-  let next_states_present = Array.make n false in 
-  let rec aux app_delta_to_states states = (*On applique la fonction de transfert sur chaque état*)
-    match states with 
-    |[] -> ()
-    | q :: qs -> 
-      next_states_present.(a.delta.(q).(letter)) <- true; (*si l'état est présent quand on fait letter, on ajoute l'état aux états qu'on aura ensuite*)
-      aux qs
-  in aux lst
+  let next_states_present = Array.make n false in
+  List.iter (fun q -> (List.iter (fun q' -> next_states_present.(q') <- true) nfa.delta.(q).(letter))) lst; 
   let next_set = ref [] in 
-  for state = 0 to 0 do
-    if next_states_present.(i) then next_set := i :: !next_set
+  for state = n - 1 downto 0 do
+    if next_states_present.(state) then next_set := state :: !next_set
   done;
   !next_set
+
+
+let powerset nfa = 
+  let n = Array.length a.delta in
+  let m = Array.length a.delta.(0) in 
+  let sets = Hashtbl.create n in 
+  Hashtbl.add sets [0] 0;
+  let transitions = ref [] in 
+  let last_dfa_state = ref 0 in (*indice du dernier state de dfa qu'on a ajouté*)
+
+  let add_set set = (*si le set existe : renvoie false,indice du set déjà existant. sinon, renvoie true et le nouvel indice*)
+    if Hashtbl.mem sets set then 
+      let index = Hashtbl.find sets set in 
+      true,index 
+    else
+      incr last_dfa_state;
+      Hashtbl.add sets set !last_dfa_state
+      false,!last_dfa_state
+  
+  let rec dfs set start = 
+    for letter = 0 to m - 1 do (*On construit notre nouvel ensemble d'état pour chaque lettre potentielle, et on ajoute les transitions*) 
+      let new_set = build_set nfa set letter in
+      let set_already_exists, endpoint = add_set new_set in 
+      transitions := (start,letter,endpoint) :: !transitions in
+      if not set_already_exists then dfs new_set endpoint
+    done;
+  in dfs [0] 0; 
+  let nb_dfa = !last_dfa_state + 1 (*on commence à 0*)
+  let transitions_dfa = Array.make matrix n m (-1) in 
+  List.iter (fun (start,lettre,endpoint) -> transitions_dfa.(start).(lettre) <- endpoint) !transitions;
+
+  let rec is_ok set = 
+    match set with 
+    |[] -> false 
+    |q :: qs -> nfa.accepting.(q) || is_accepting qs 
+  in 
+  let accepting_dfa = Array.make nb_dfa false in 
+  Hashtbl.iter (fun etat indice -> accepting_dfa.(indice) <- is_ok etat) sets
+  
+  
+
