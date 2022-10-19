@@ -117,9 +117,55 @@ let or_delta seq =
     delta_var = seq.delta_var}
   |_ -> raise (Wrong_rule "non")
 
-let impl_delta
+let impl_delta seq =
+  match seq.delta with 
+  |Impl(f1,f2) :: reste ->
+    {gamma = f1 :: seq.gamma;
+    gamma_var = seq.gamma_var;
+    delta= f2 :: reste;
+    delta_var = seq.delta_var}
+  |_ -> raise (Wrong_rule "impl_delta")
 
-let proof_search sequent = failwith "todo"
+let not_delta seq = 
+  match seq.delta with
+  |Not(f1) :: reste -> 
+    {gamma = f1 :: seq.gamma;
+    delta = reste;
+    gamma_var = seq.gamma_var;
+    delta_var = seq.delta_var}
+  |_ -> raise (Wrong_rule "not_delta")
+
+
+let rec proof_search sequent = 
+  axiom sequent || bot sequent || top sequent (*on règle direct les cas faciles*)
+  ||
+  match sequent.gamma with
+  |f :: reste -> 
+    begin 
+    match f with 
+    |And(f1,f2) -> proof_search (and_gamma sequent)
+    |Or(f1,f2) ->
+      let sequent1,sequent2 = or_gamma sequent in proof_search seq1 && proof_search seq2
+    |Not(f1) -> proof_search (not_gamma sequent)
+    |Impl(f1,f2) -> 
+      let sequent1,sequent2 = impl_gamma sequent in proof_search sequent1 && proof_search sequent2
+    end;
+  |[] -> 
+    begin(*rien dans gamma, du coup on teste delta*)
+    match sequent.delta with 
+    | f :: reste ->
+      begin
+      match f with
+      | And(f1,f2) ->
+        let sequent1,sequent2 = and_delta sequent in proof_search sequent1 && proof_search sequent2
+      | Or(f1,f2) -> proof_search (or_delta sequent)
+      | Impl(f1,f2) -> proof_search (impl_delta sequent)
+      | Not(f1) -> proof_search (not_delta f1)
+      end
+      |[] -> false (*on a rien non plus, c'est forcément faux*)
+    end;
+
+
 
 let print_proof_result gamma delta =
   let result = proof_search (create_sequent gamma delta) in
