@@ -11,11 +11,13 @@ let calc_u =
   u_tab;;
 
 calc_u;;
+(*
 print_int (u_tab.(123) mod 1000);;
 print_newline ();;
 print_int (u_tab.(456) mod 1000);;
 print_newline ();;
 print_int (u_tab.(789) mod 1000);;
+*)
 
 let vt_value i p = if (u_tab.(i) mod 10000) < p then 1 else 0;;
 
@@ -99,11 +101,69 @@ let explicit_graph_v2 n p k =
   done;
   tab;;
 
+let print_q q = 
+  while not (Queue.is_empty q) do
+    let x = Queue.pop q in 
+    Printf.printf  "%d | " x;
+  done;
+  print_newline ();
+  print_newline ();;
 
-let nb_moves n p = 
-  let g = explicit_graph_v2 n p in 
+exception FoundObjective of (int * int)
+let closest_objective g s k objectives_completed =
+  let n = Array.length g in
+  let seen = Array.make n false in 
+  let dist = ref 0 in
+  let q = Queue.create () in 
+  Queue.push (-1) q;
+  let ajoute v = 
+    
+    Printf.printf "On est à une distance %d" !dist;
+    print_newline ();
+    if not seen.(v) then begin
+      if (v >= n - k && (not objectives_completed.(v))) then raise (FoundObjective (v,!dist));
+      seen.(v) <- true;
+      Queue.push v q
+    end
+  in ajoute 0;
+  match Queue.pop q with
+    |(-1) -> incr dist;
+  print_int !dist;
+  (-1,-1);;
+  (*
+  while not (Queue.is_empty q) do 
+    match Queue.pop q with
+    |(-1) -> incr dist
+    |w -> begin 
+        List.iter ajoute g.(w);
+        Queue.push (-1) q
+      end
+  done;
+  *)
   
 
+
+let nb_moves n p k = 
+  let g = explicit_graph_v2 n p k in
+  let objectives_completed = Array.make n false in 
+  let total_moves = ref 0 in
+  try
+    let next_vertice,n_moves = closest_objective g 0 k objectives_completed in (*init*)
+    failwith "raté"
+  with 
+  |FoundObjective (v,d) -> total_moves := !total_moves + d;
+                          objectives_completed.(v) <- true;
+  (*for i = 0 to k - 2 do
+    try
+      let next_vertice,nb_moves = closest_objective g next_vertice k objectives_completed in failwith "pas d'erreur"
+    with 
+      |FoundObjective -> total_moves := !total_moves + nb_moves;
+                         objectives_completed.(next_vertice) <- true;
+  done;*)
+  !total_moves;;
+    
+  
+(*
 print_newline ();;
 print_newline ();;
 print_newline ();;
@@ -121,3 +181,11 @@ print_int (connex_to_0 100 543);;
 print_newline ();;
 print_int (connex_to_0 1000 12);;
 print_newline ();;
+print_newline ();;
+print_newline ();;
+print_int (nb_moves 100 32 10);;
+*)
+print_newline ();;
+print_newline ();;
+print_newline ();;
+nb_moves 100 32 10;;
