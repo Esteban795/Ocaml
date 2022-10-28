@@ -101,68 +101,82 @@ let explicit_graph_v2 n p k =
   done;
   tab;;
 
+let g_test = 
+  let g = Array.make 7 [] in
+  g.(0) <- [1;2;4];
+  g.(1) <- [0;2;5;6];
+  g.(2) <- [0;1;3;4];
+  g.(3) <- [2;4];
+  g.(4) <- [0;3;5];
+  g.(5) <- [1;2;4;6];
+  g.(6) <- [1;5];
+  g;;
+
+let print_tab tab = 
+  for i = 0 to Array.length tab - 1 do
+    let txt = if tab.(i) then "true |"  else "false |" in  
+    Stdlib.print_string txt;
+  done;
+  print_newline ();;
+
 let print_q q = 
-  while not (Queue.is_empty q) do
-    let x = Queue.pop q in 
-    Printf.printf  "%d | " x;
+  let cop = Queue.copy q in 
+  while not (Queue.is_empty cop) do 
+    let x = Queue.pop cop in 
+    Printf.printf "%d |" x;
   done;
   print_newline ();
   print_newline ();;
 
-exception FoundObjective of (int * int)
+exception FoundObjective of (int * int);;
 let closest_objective g s k objectives_completed =
+  (*Printf.printf "Sommet initial : %d" s;
+  print_newline ();*)
   let n = Array.length g in
   let seen = Array.make n false in 
   let dist = ref 0 in
   let q = Queue.create () in 
   Queue.push (-1) q;
   let ajoute v = 
-    
-    Printf.printf "On est à une distance %d" !dist;
-    print_newline ();
     if not seen.(v) then begin
-      if (v >= n - k && (not objectives_completed.(v))) then raise (FoundObjective (v,!dist));
       seen.(v) <- true;
       Queue.push v q
     end
-  in ajoute 0;
-  match Queue.pop q with
-    |(-1) -> incr dist;
-  print_int !dist;
-  (-1,-1);;
-  (*
-  while not (Queue.is_empty q) do 
+  in ajoute s;
+  while not (Queue.is_empty q) do
+    (*print_q q;*) 
     match Queue.pop q with
     |(-1) -> incr dist
-    |w -> begin 
+    |w -> begin
+        if (w >= n - k && (not objectives_completed.(w))) then raise (FoundObjective (w,!dist));
         List.iter ajoute g.(w);
         Queue.push (-1) q
       end
-  done;
-  *)
-  
-
+  done;;
 
 let nb_moves n p k = 
   let g = explicit_graph_v2 n p k in
+  (*let g = g_test in*)
   let objectives_completed = Array.make n false in 
   let total_moves = ref 0 in
-  try
-    let next_vertice,n_moves = closest_objective g 0 k objectives_completed in (*init*)
-    failwith "raté"
-  with 
-  |FoundObjective (v,d) -> total_moves := !total_moves + d;
-                          objectives_completed.(v) <- true;
-  (*for i = 0 to k - 2 do
-    try
-      let next_vertice,nb_moves = closest_objective g next_vertice k objectives_completed in failwith "pas d'erreur"
-    with 
-      |FoundObjective -> total_moves := !total_moves + nb_moves;
-                         objectives_completed.(next_vertice) <- true;
-  done;*)
+  let temp_s = ref 0 in 
+  for i = 0 to k - 1 do
+    try 
+      closest_objective g !temp_s k objectives_completed;
+    with
+    |FoundObjective(s,d) -> 
+      (*Printf.printf "Sommet : %d, à distance %d du sommet %d" s d !temp_s;*)
+      print_newline ();
+      objectives_completed.(s) <- true;
+      temp_s := s;
+      total_moves := !total_moves + d;
+      (*Printf.printf "Total : %d" !total_moves;*)
+      print_newline ();
+  done;
   !total_moves;;
-    
-  
+
+print_int (nb_moves 100 32 10);;
+print_newline ();;
 (*
 print_newline ();;
 print_newline ();;
@@ -183,9 +197,4 @@ print_int (connex_to_0 1000 12);;
 print_newline ();;
 print_newline ();;
 print_newline ();;
-print_int (nb_moves 100 32 10);;
-*)
-print_newline ();;
-print_newline ();;
-print_newline ();;
-nb_moves 100 32 10;;
+print_int (nb_moves 100 32 10);;*)
