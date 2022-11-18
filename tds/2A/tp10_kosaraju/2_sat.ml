@@ -73,4 +73,24 @@ let graph_of_cnf f =
   in 
   list.iter add_clause f;
   g
+
+exception Unsatisfiable
+let satisfiable f = 
+  let g = graph_of_cnf f in 
+  let n = Array.length g in 
+  let belongs_to_cfc = Array.make n (-1) in (*le numéro la cfc de chaque xi et non xi*)
+  let cfcs = kosaraju g in
+  let assign_cfc_number cfc_n x = belongs_to_cfc.(x) <- cfc_n;
+  let assign_for_all_of_cfc cfc i = List.iter (assign i) cfc; (*on assigne le même numéro à tous les membres de la cfc, qui sont stockés sous forme de liste*)
+  List.iter (fun cfc i -> assign_for_all_of_cfc cfc i) cfcs;
+  try 
+    for x = 0 to n/2 - 1 do 
+      if belongs_to_cfc.(x) = belongs_to_cfc.(2 * x + 1) then raise Unsatisfiable
+    done;
+    true;
+  with 
+  |Unsatisfiable -> false
+
+
+
     
