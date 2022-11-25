@@ -228,8 +228,8 @@ let astar initial =
 
 (* Part 3 *)
 
-exception Found of int
-
+exception Found
+(*
 let idastar_length initial =
   let s = copy initial in 
   let minimum = ref max_int in
@@ -241,7 +241,7 @@ let idastar_length initial =
     else begin
       minimum := max_int;
       let bouger move = 
-        apply state move;
+        apply s move;
         minimum := min !minimum (dfs (prof + 1) maximum);
       in List.iter bouger (possible_moves s);
       !minimum  end in
@@ -250,9 +250,9 @@ let idastar_length initial =
     if m = max_int then None
     else loop m in 
   try 
-    loop state.h 
+    loop s.h 
   with
-  |Found d -> Some d
+  |Found-> Some d*)
 
 let opposite_move move =
   match move with 
@@ -263,34 +263,32 @@ let opposite_move move =
   |No_move -> No_move
 
 let idastar initial =
-  let chemin = Vector.create () in 
+  let chemin = Vector.create () in
   let s = copy initial in 
-  let minimum = ref max_int in
-  let rec dfs maximum prof last_move = 
+  let rec dfs prof maximum last_move = 
     let c = prof + s.h in 
     if c > maximum then c
+    else if s.h = 0 then raise Found
     else 
-      if s.h = 0 then raise (Found prof)
-    else begin
-      minimum := max_int;
-      let bouger move =
-        if move <> opposite_move move then (*être sûr qu'on revient pas en arrière*)
+      let minimum = ref max_int in
+      let bouger move = 
+        if move <> opposite_move last_move then (
           Vector.push chemin move;
           apply s move;
           minimum := min !minimum (dfs (prof + 1) maximum move);
+          apply s (opposite_move move);
+          ignore (Vector.pop chemin))
       in List.iter bouger (possible_moves s);
       !minimum
-    end
-  in
+  in 
   let rec loop maxi = 
-    let m = dfs maxi 0 No_move in 
+    let m = dfs 0 maxi No_move in 
     if m = max_int then None
     else loop m in 
-  try 
+  try
     loop s.h 
-  with
-  |Found d -> Some chemin
-  
+  with 
+  |Found  -> Some chemin
 
 let print_direction_vector t =
   for i = 0 to Vector.length t - 1 do
@@ -307,6 +305,7 @@ let print_idastar state =
 
 
 let main () =
+  print_idastar fifty;
   Printexc.record_backtrace true
 
 let () = main ()
