@@ -18,8 +18,9 @@ let g0 = {
 }
 
 let cyk_reconnait cnf s = 
-  if s = "" then true else
-  let n = String.length s in 
+  if s = "" then true (*else it breaks the code *)
+  else
+  let n = String.length s in
   let k = cnf.nb_variables in 
   let t = Array.make_matrix n n [||] in 
   for i = 0 to n - 1 do 
@@ -29,7 +30,7 @@ let cyk_reconnait cnf s =
   done;
 
   for d = 0 to n - 1 do 
-    List.iter (fun (i,c) -> if c = s.[d] then t.(0).(d).(i) <- true) cnf.unitaires
+    List.iter (fun (i,c) -> if c = s.[d] then t.(1).(d).(i) <- true) cnf.unitaires
   done;
 
   for l = 2 to n - 1 do 
@@ -47,5 +48,5 @@ let cyk_reconnait cnf s =
   !result
 
 let _ = 
-  if cyk_reconnait g0 "a" then Printf.printf "Oui\n" else Printf.printf "Non\n"
+  if cyk_reconnait g0 "abba" then Printf.printf "Oui\n" else Printf.printf "Non\n"
         
