@@ -1,6 +1,6 @@
 (*finds how many x is in t, t must be sorted first. 
 O(log(n)) *)
-let premiere_occ t x =
+let first_occ t x =
   let rec aux deb fin =
       if deb > fin then -1 else
       if deb = fin then deb
@@ -12,7 +12,7 @@ let premiere_occ t x =
       in aux 0 (Array.length t)
 
 
-let derniere_occ t x =
+let last_occ t x =
   let rec aux deb fin =
       if deb > fin then -1 else
       if deb = (fin-1) then deb
@@ -24,7 +24,7 @@ let derniere_occ t x =
       in aux 0 (Array.length t)
 
 let nb_occs_triee elt tbl =
-  let first_index = premiere_occ tbl elt in
-  let last_index = derniere_occ tbl elt in
+  let first_index = first_occ tbl elt in
+  let last_index = last_occ tbl elt in
   if first_index = -1 || last_index = -1 then failwith "Element not in the list."
   else (last_index - first_index) + 1

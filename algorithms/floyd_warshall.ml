@@ -1,6 +1,7 @@
 (* g is an adjacency list*)
 
-(*next is built following this :
+(*
+next is built following this :
 - next.(i).(j) = None if and only if j isn't accessible from i
 - if next.(i).(j) is Some k, then one of the shortest paths from i to j starts with edge i->k
 *)
