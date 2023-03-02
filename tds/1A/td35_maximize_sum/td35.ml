@@ -49,13 +49,55 @@ let rec max_liste lst =
 
 
 (*Solution naïve*)
-let rec eval matrix s =
-  let i = List.length s in
-  if i = 0 then 0
-  else 
-      let recurrence index = matrix.(i - 1).(index) + eval matrix (prive_de s index) in
-      let evals = List.map recurrence s  
-      in max_liste evals
+let rec eval m s = 
+  let j = List.length s in
+  if j = 0 then 0
+  else
+      let f i = m.(j - 1).(i) + eval m (prive_de s i) in
+      let liste_evals = List.map f s in
+      max_liste liste_evals
 
 let s_naif m = 
   eval m (range 0 (Array.length m))
+
+
+
+let s_mem m = 
+  let n = Array.length m in
+  let t = Hashtbl.create (1 lsl n) in
+  Hashtbl.add t [] 0;
+  let rec aux s = 
+      if Hashtbl.mem t s then Hashtbl.find t s
+      else begin
+          let k = List.length s in
+          let f i = m.(k - 1).(i) + aux (prive_de s i) in
+          let liste_evals = List.map f s in
+          let res = max_liste liste_evals in
+          Hashtbl.add t s res;
+          res
+      end in
+  aux (range 0 n)
+
+  
+let eval_opt2 mat = 
+  let n = Array.length mat in
+  let table = Array.make (1 lsl n) 0 in 
+  let courants = ref [0] in 
+  for k = 0 to n - 1 do
+    let nouveaux = ref [] in
+    (* Pour chaque x, on regarde toutes les colonnes non utilisees.
+        On rajoute la colonne, on obtient un y, que l'on rajoute a nouveaux
+        si c'est la premiere fois qu'on le voit et l'on met 
+        si besoin a jour la case correspondante dans table. *)
+    let traite x = 
+      for i = 0 to n - 1 do
+        if (x lsr i) land 1 = 0 then
+          let y = x + (1 lsl i) in 
+          if table.(y) = 0 then 
+            nouveaux := y :: !nouveaux;
+            table.(y) <- max (table.(x) + mat.(k).(i)) table.(y)
+      done in
+    List.iter traite !courants;
+    courants := !nouveaux
+  done;
+  table.(1 lsl n -1)

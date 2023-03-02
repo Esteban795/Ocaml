@@ -23,19 +23,19 @@ let cyk_reconnait cnf s =
   else if n = 1 then List.exists (fun (i,c) -> c = s.[0]) cnf.unitaires
   else
   let k = cnf.nb_variables in 
-  let t = Array.make_matrix n n [||] in 
+  let t = Array.make_matrix (n + 1) (n + 1) [||] in 
   for i = 0 to n - 1 do 
     for j = 0 to n - 1 do 
       t.(i).(j) <- Array.make k false
     done;
   done;
-  for d = 0 to n - 1 do 
+  for d = 0 to n do 
     List.iter (fun (i,c) -> if c = s.[d] then t.(1).(d).(i) <- true) cnf.unitaires
   done;
 
-  for l = 2 to n - 1 do 
+  for l = 2 to n do 
     for l' = 0 to l - 1 do
-      for d = 0 to n - 1 do
+      for d = 0 to n do
         if d + l' < n then List.iter (fun (a,b,c) -> t.(l).(d).(a) <- t.(l).(d).(a) || (t.(l').(d).(b) && t.(l - l').(d + l').(c))) cnf.binaires
       done;
     done;
