@@ -9,6 +9,11 @@ type cnf = {
   mot_vide : bool
 }
 
+type arbre = 
+  |Unaire of int * char 
+  |Binaire of int * arbre * arbre
+
+
 let g0 = {
  initial = 0;
  nb_variables = 5;
@@ -49,9 +54,51 @@ let cyk_reconnait g s =
   done;
   !result
 
+let cyk_analyse g s = 
+  if s = "" then true (*else it breaks the code *)
+  else
+  let n = String.length s in
+  let k = g.nb_variables in 
+  let t = Array.make_matrix (n + 1) n [||] in 
+  let backtrace = Array.make_matrix (n + 1) n [||] in 
+
+  for i = 0 to n do 
+    for j = 0 to n - 1 do 
+      t.(i).(j) <- Array.make k false;
+      backtrace.(i).(j) <- Array.make k []
+    done;
+  done;
+
+  
+  for d = 0 to n - 1 do
+    List.iter (fun (i, c) -> if c = s.[d] then t.(1).(d).(i) <- true) g.unitaires
+  done;
+
+  for l = 2 to n do 
+    for d = 0 to n - 1 do
+      for l' = 0 to l - 1 do
+        let rec parc_lst lst = 
+          match lst with 
+          |[] -> ()
+          | (a,b,c) :: xs -> 
+            t.(l).(d).(a) <- t.(l).(d).(a) || (t.(l').(d).(b) && t.(l - l').(d + l').(c));
+            backtrace.(l).(d).(a) <- (l',b,c) :: backtrace.(l).(d).(a) in 
+        if d + l' < n then parc_lst g.binaires;
+        
+      done;
+    done;
+  done;
+
+  let result = ref false in 
+  for i = 0 to k - 1 do
+    result := !result || t.(n).(0).(i)
+  done;
+  if !result then backtrace
+  else []
+
 
 let _ =
-  let word = "abba" in 
+  let word = "" in 
   Printf.printf "%s\n" word;
   if cyk_reconnait g0 word then Printf.printf "Oui\n" else Printf.printf "Non\n"
         
