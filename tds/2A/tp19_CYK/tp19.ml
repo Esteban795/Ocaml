@@ -17,36 +17,41 @@ let g0 = {
  mot_vide = false
 }
 
-let cyk_reconnait cnf s = 
-  let n = String.length s in
+let cyk_reconnait g s = 
   if s = "" then true (*else it breaks the code *)
-  else if n = 1 then List.exists (fun (i,c) -> c = s.[0]) cnf.unitaires
   else
-  let k = cnf.nb_variables in 
-  let t = Array.make_matrix (n + 1) (n + 1) [||] in 
-  for i = 0 to n - 1 do 
+  let n = String.length s in
+  let k = g.nb_variables in 
+  let t = Array.make_matrix (n + 1) n [||] in 
+
+  for i = 0 to n do 
     for j = 0 to n - 1 do 
       t.(i).(j) <- Array.make k false
     done;
   done;
-  for d = 0 to n do 
-    List.iter (fun (i,c) -> if c = s.[d] then t.(1).(d).(i) <- true) cnf.unitaires
+
+  
+  for d = 0 to n - 1 do
+    List.iter (fun (i, c) -> if c = s.[d] then t.(1).(d).(i) <- true) g.unitaires
   done;
 
   for l = 2 to n do 
-    for l' = 0 to l - 1 do
-      for d = 0 to n do
-        if d + l' < n then List.iter (fun (a,b,c) -> t.(l).(d).(a) <- t.(l).(d).(a) || (t.(l').(d).(b) && t.(l - l').(d + l').(c))) cnf.binaires
+    for d = 0 to n - 1 do
+      for l' = 0 to l - 1 do
+        if d + l' < n then List.iter (fun (a,b,c) -> t.(l).(d).(a) <- t.(l).(d).(a) || (t.(l').(d).(b) && t.(l - l').(d + l').(c))) g.binaires
       done;
     done;
   done;
 
   let result = ref false in 
   for i = 0 to k - 1 do
-    result := !result || t.(n - 1).(0).(i)
+    result := !result || t.(n).(0).(i)
   done;
   !result
 
-let _ = 
-  if cyk_reconnait g0 "b" then Printf.printf "Oui\n" else Printf.printf "Non\n"
+
+let _ =
+  let word = "abba" in 
+  Printf.printf "%s\n" word;
+  if cyk_reconnait g0 word then Printf.printf "Oui\n" else Printf.printf "Non\n"
         
