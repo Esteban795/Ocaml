@@ -54,47 +54,45 @@ let cyk_reconnait g s =
   done;
   !result
 
+exception No_tree
+
 let cyk_analyse g s = 
-  if s = "" then true (*else it breaks the code *)
+  if s = "" then raise No_tree (* else it breaks the code *)
   else
   let n = String.length s in
   let k = g.nb_variables in 
   let t = Array.make_matrix (n + 1) n [||] in 
-  let backtrace = Array.make_matrix (n + 1) n [||] in 
 
   for i = 0 to n do 
     for j = 0 to n - 1 do 
-      t.(i).(j) <- Array.make k false;
-      backtrace.(i).(j) <- Array.make k []
+      t.(i).(j) <- Array.make k None;
     done;
   done;
 
   
   for d = 0 to n - 1 do
-    List.iter (fun (i, c) -> if c = s.[d] then t.(1).(d).(i) <- true) g.unitaires
+    List.iter (fun (i, c) -> if c = s.[d] then t.(1).(d).(i) <- Some (Unaire (i,c))) g.unitaires
   done;
 
   for l = 2 to n do 
-    for d = 0 to n - 1 do
+    for d = 0 to n - l do
       for l' = 0 to l - 1 do
-        let rec parc_lst lst = 
-          match lst with 
-          |[] -> ()
-          | (a,b,c) :: xs -> 
-            t.(l).(d).(a) <- t.(l).(d).(a) || (t.(l').(d).(b) && t.(l - l').(d + l').(c));
-            backtrace.(l).(d).(a) <- (l',b,c) :: backtrace.(l).(d).(a) in 
-        if d + l' < n then parc_lst g.binaires;
-        
+        let traiter (a,b,c) = 
+          match t.(l).(d).(a), t.(l').(d).(b), t.(l - l').(d + l').(c) with
+          | None , Some i, Some j ->
+              t.(l).(d).(a) <- Some (Binaire (a,i,j))
+          | _ -> ()
+        in 
+        List.iter traiter g.binaires
       done;
     done;
   done;
+  
+  match t.(n).(0).(g.initial) with 
+  | None -> raise No_tree
+  | Some x -> x
 
-  let result = ref false in 
-  for i = 0 to k - 1 do
-    result := !result || t.(n).(0).(i)
-  done;
-  if !result then backtrace
-  else []
+  
 
 
 let _ =
