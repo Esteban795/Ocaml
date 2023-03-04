@@ -1,3 +1,9 @@
+(*
+
+COCKE-YOUNGER-KASAMI algorithm
+
+*)
+
 type regle_unitaire = int * char
 type regle_binaire = int * int * int
 
@@ -14,7 +20,7 @@ type arbre =
   |Binaire of int * arbre * arbre
 
 
-let g0 = {
+let g0 = {i
  initial = 0;
  nb_variables = 5;
  unitaires = [(0,'b');(1,'a');(2, 'b');(4,'a')];
@@ -92,7 +98,39 @@ let cyk_analyse g s =
   | None -> raise No_tree
   | Some x -> x
 
-  
+
+let cyk_compte g s = 
+  if s = "" then g.mot_vide (* else it breaks the code *)
+  else
+  let n = String.length s in
+  let k = g.nb_variables in 
+  let t = Array.make_matrix (n + 1) n [||] in 
+
+  for i = 0 to n do 
+    for j = 0 to n - 1 do 
+      t.(i).(j) <- Array.make k 0;
+    done;
+  done;
+
+  let traiter_unitaire (i,c) = 
+    for j = 0 to n - 1 do 
+      if entree.[j] = c then t.(1).(j).(i) <- 1
+    done;
+  in
+  List.iter traiter_unitaire g.unitaires;
+
+  for l = 2 to n do 
+    for d = 0 to n - l do
+      for l' = 0 to l - 1 do
+        let traiter_binaire (i,j,k) = 
+          t.(l).(d).(i) <- t.(l).(debut).(i) + (t.(l').(debut).(j) * t.(l - l').(d + l').(k))
+        in
+        List.iter traiter_binaire g.binaires
+      done;
+    done;
+  done;
+
+  t.(n).(0).(g.initial)
 
 
 let _ =
