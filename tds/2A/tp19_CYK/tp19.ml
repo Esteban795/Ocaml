@@ -1,7 +1,32 @@
 (*
-
 COCKE-YOUNGER-KASAMI algorithm
 
+Pseudo-code (Q6) 
+
+---------------------------------------------------------------------------------------------------------------
+
+fonction CYK(g,w)
+  si w = mot_vide : renvoyer S -> mot_vide
+
+  n = longueur du mot 
+  k = nombre de variables
+
+  t = tableau (n + 1) * n * k init à false 
+
+  pour chaque règle Xi -> a faire 
+    pour d = 0 à n - 1 faire
+      si w[d] = a alors t[1,d,i] = true 
+
+
+  pour l = 2 à n faire 
+    pour d = 0 à n - l faire
+     pour l' = 0 à l - 1 faire 
+      pour chaque règle de la forme X_i -> X_jX_k faire 
+        t[l,d,i] <- t[l,d,i] || ( t[l',d,i] && t[l - l', d + l',i])
+  
+  renvoyer t[n,0,g.initial]
+
+--------------------------------------------------------------------------------------------------------------
 *)
 
 type regle_unitaire = int * char
@@ -133,9 +158,6 @@ let cyk_compte (g : cnf) (s : string) =
 
 
 
-
-
-
 type symbole = 
 |T of char
 |V of int
@@ -154,6 +176,62 @@ let g1 = {
   initial = 0;
   regles = [(0,[T 'a'; V 0 ; T 'b']); (0,[T 'a'; V 1 ; T 'b']); (1,[V 2; V 1]) ; (1,[]); (2,[T 'a']); (2,[T 'b'])];
 }
+
+(*On ajoute juste la règle initiale, sans se préoccuper si elle existe déjà ou pas*)
+let start g = {
+  nb_variables = g.nb_variables + 1;
+  regles = (g.nb_variables,[V g.initial]) :: g.regles;
+  initial = g.nb_variables
+}
+  
+let term g =
+  let next_available = ref g.nb_variables in (*On sait combien de variables on a en tout*)
+  let tab = Array.make 256 (-1) in
+  
+  
+  (*
+  On applique la transfo 'term' du cours. 
+  On mappe toutes les lettres qui existent dans notre mot sur de nouvelles variables fraîches   
+  *)
+  let rec recup_variables_fraiches mot =
+    match mot with 
+    | [] -> []
+    | V i :: xs -> (V i) :: recup_variables_fraiches xs
+    | T c :: xs ->
+      let indice_tab = int_of_char c in
+      if tab.(indice_tab) = -1 then begin
+        tab.(indice_tab) <- !next_available;
+        incr next_available 
+      end;
+      V tab.(indice_tab) :: recup_variables_fraiches xs
+  in 
+
+  (*
+    Pour les règles de la forme 
+    X -> truc
+    
+    on crée les variables correspondant aux terminaux présents 
+    et on remplace l'occurence de chaque terminal par la variable 
+    nouvellement créée.
+
+  *)
+  let transforme_regle (v,mot) = 
+    if List.length mot <= 1 then (v,mot)
+    else (v,recup_variables_fraiches mot)
+  in 
+
+
+  let regles_bis = ref (List.map transforme_regle g.regles) in 
+  for i = 0 to 255 do 
+    if tab.(i) <> -1 then 
+      regles_bis := (tab.(i),[T (char_of_int i)]) :: !regles_bis
+  done;
+
+  {
+    nb_variables = !next_available;
+    regles = !regles_bis;
+    initial = g.initial
+  }
 
 
 let _ =
