@@ -20,7 +20,7 @@ type arbre =
   |Binaire of int * arbre * arbre
 
 
-let g0 = {i
+let g0 = {
  initial = 0;
  nb_variables = 5;
  unitaires = [(0,'b');(1,'a');(2, 'b');(4,'a')];
@@ -28,7 +28,7 @@ let g0 = {i
  mot_vide = false
 }
 
-let cyk_reconnait g s = 
+let cyk_reconnait (g : cnf) (s : string) = 
   if s = "" then true (*else it breaks the code *)
   else
   let n = String.length s in
@@ -62,7 +62,7 @@ let cyk_reconnait g s =
 
 exception No_tree
 
-let cyk_analyse g s = 
+let cyk_analyse (g : cnf) (s : string) = 
   if s = "" then raise No_tree (* else it breaks the code *)
   else
   let n = String.length s in
@@ -99,9 +99,7 @@ let cyk_analyse g s =
   | Some x -> x
 
 
-let cyk_compte g s = 
-  if s = "" then g.mot_vide (* else it breaks the code *)
-  else
+let cyk_compte (g : cnf) (s : string) = 
   let n = String.length s in
   let k = g.nb_variables in 
   let t = Array.make_matrix (n + 1) n [||] in 
@@ -114,7 +112,7 @@ let cyk_compte g s =
 
   let traiter_unitaire (i,c) = 
     for j = 0 to n - 1 do 
-      if entree.[j] = c then t.(1).(j).(i) <- 1
+      if s.[j] = c then t.(1).(j).(i) <- 1
     done;
   in
   List.iter traiter_unitaire g.unitaires;
@@ -123,14 +121,39 @@ let cyk_compte g s =
     for d = 0 to n - l do
       for l' = 0 to l - 1 do
         let traiter_binaire (i,j,k) = 
-          t.(l).(d).(i) <- t.(l).(debut).(i) + (t.(l').(debut).(j) * t.(l - l').(d + l').(k))
+          t.(l).(d).(i) <- t.(l).(d).(i) + (t.(l').(d).(j) * t.(l - l').(d + l').(k))
         in
         List.iter traiter_binaire g.binaires
       done;
     done;
   done;
+  if n = 0 && g.mot_vide then 1
+  else  if n = 0 then 0 
+  else t.(n).(0).(g.initial)
 
-  t.(n).(0).(g.initial)
+
+
+
+
+
+type symbole = 
+|T of char
+|V of int
+
+type regle = int * symbole list
+
+type grammaire = {
+  nb_variables : int;
+  regles : regle list;
+  initial : int;
+}
+
+
+let g1 = {
+  nb_variables = 3;
+  initial = 0;
+  regles = [(0,[T 'a'; V 0 ; T 'b']); (0,[T 'a'; V 1 ; T 'b']); (1,[V 2; V 1]) ; (1,[]); (2,[T 'a']); (2,[T 'b'])];
+}
 
 
 let _ =
