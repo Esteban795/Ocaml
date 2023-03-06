@@ -54,7 +54,7 @@ let g0 = {
 }
 
 let cyk_reconnait (g : cnf) (s : string) = 
-  if s = "" then true (*else it breaks the code *)
+  if s = "" then g.mot_vide (* don't waste time *)
   else
   let n = String.length s in
   let k = g.nb_variables in 
@@ -78,12 +78,7 @@ let cyk_reconnait (g : cnf) (s : string) =
       done;
     done;
   done;
-
-  let result = ref false in 
-  for i = 0 to k - 1 do
-    result := !result || t.(n).(0).(i)
-  done;
-  !result
+  t.(n).(0).(g.initial)
 
 exception No_tree
 
@@ -157,6 +152,10 @@ let cyk_compte (g : cnf) (s : string) =
   else t.(n).(0).(g.initial)
 
 
+(*
+Objectif : pouvoir mettre n'importe quelle grammaire sous forme normale de Chomsky   
+*)
+
 
 type symbole = 
 |T of char
@@ -176,6 +175,7 @@ let g1 = {
   initial = 0;
   regles = [(0,[T 'a'; V 0 ; T 'b']); (0,[T 'a'; V 1 ; T 'b']); (1,[V 2; V 1]) ; (1,[]); (2,[T 'a']); (2,[T 'b'])];
 }
+
 
 (*On ajoute juste la règle initiale, sans se préoccuper si elle existe déjà ou pas*)
 let start g = {
@@ -234,6 +234,56 @@ let term g =
   }
 
 
+(*
+On applique la transformation 'bin' du cours.
+
+Dans binarise, on transforme toutes les règles de la forme
+
+A -> X_1 ... X_k
+
+par 
+
+A -> X_1 A_1
+A_i -> X_i+1 A_i+1
+
+*)
+let bin g = 
+  let next_available = ref g.nb_variables in (*compter le nombre de variables totales*)
+
+  (*
+  On a X -> X_1 ... X_k
+  et on renvoie 
+  
+  X -> X_1 Y_1 
+  Y_1 -> X_2 Y_2
+  Y_2 -> X_3 Y_3 
+  .etc  (Y_i sont des variables qu'on a crée par nous-mêmes)
+  *)
+  let rec binarise (v,droite) = 
+    match droite with 
+    |[] | [ _ ] | [_ ; _] -> [(v,droite)] (*on a soit rien, soit une règle qui donne juste A -> X.. On l'éliminera à l'étape UNIT d'après*)
+    | a :: reste ->
+      let nouvelle_variable = !next_available in 
+      let nouvelle_regle = (v,[a ; V nouvelle_variable]) in 
+      incr next_available;
+      nouvelle_regle :: (binarise (nouvelle_variable, reste))
+  in 
+
+  let rec traiter_regles l = 
+    match l with 
+    | [] -> []
+    | r :: ls -> binarise r @ traiter_regles ls
+  in 
+
+  let regles' = 
+    traiter_regles g.regles in 
+    {
+      nb_variables = !next_available;
+      regles = regles';
+      initial = g.initial
+    }
+
+    
 let _ =
   let word = "" in 
   Printf.printf "%s\n" word;
