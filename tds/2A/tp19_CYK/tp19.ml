@@ -283,7 +283,51 @@ let bin g =
       initial = g.initial
     }
 
-    
+(*
+On applique la transfo 'del' du cours. 
+
+On commence par calculer les variables annulables
+(Une variable est annulable si on a X -> epsilon ou X -> YZ avec Y et Z annulables)
+
+
+*)
+let del (g : grammaire) =
+
+  (* On cherche les variables annulables *)
+  let annulables = Array.make g.nb_variables false in
+  let switch = ref false in 
+  let traite_regle (v,droite) =
+    let rec aux dr = 
+      match dr with 
+      | [] -> switch := true; annulables.(v) <- true; (* On arrive à Epsilon, donc c'est bien annulable *)
+      | V x :: reste when annulables.(x) -> aux reste; (* On sait déjà qu'on a une variable annulable, donc il nous reste à vérifier le reste*)
+      | _ -> () (* me les brise le linter avec le pattern matching pas exhaustif *)
+    in 
+    if not annulables.(v) then aux droite 
+  in
+  while !switch do 
+    switch := false;
+    List.iter traite_regle g.regles
+  done;
+
+  let rec traite_regles regles = 
+    match regles with 
+    | [] -> [] 
+    | (v,[]) :: ls -> traite_regles ls (*on efface toutes les règles de la forme X -> epsilon*)
+    | (v,[x]) :: ls -> (v,[x]) :: traite_regles ls (* On touche pas aux règles X -> a, où a est terminal*)
+    | (v,[x ,y]) :: ls ->
+        
+  in
+  let regles_bis = 
+    if annulables.(g.initial) then (g.initial,[]) :: traite_regles g.regles
+    else traite_regles g.regles
+  in 
+  {
+    nb_variables = g.nb_variables;
+    regles = regles_bis;
+    initial = g.initial
+  }
+
 let _ =
   let word = "" in 
   Printf.printf "%s\n" word;
