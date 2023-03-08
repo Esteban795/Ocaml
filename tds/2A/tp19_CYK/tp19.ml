@@ -315,7 +315,17 @@ let del (g : grammaire) =
     | [] -> [] 
     | (v,[]) :: ls -> traite_regles ls (*on efface toutes les règles de la forme X -> epsilon*)
     | (v,[x]) :: ls -> (v,[x]) :: traite_regles ls (* On touche pas aux règles X -> a, où a est terminal*)
-    | (v,[x ,y]) :: ls ->
+    | (v,[x ; y]) :: ls ->
+      let temp = ref [] in 
+      let ajouter_autre_si_annulable a b = 
+        match a with 
+        | V a' when annulables.(a') -> temp := (v,[b]) :: !temp
+        | _ -> () (*pattern matching pas exhaustif*)
+      in 
+      ajouter_autre_si_annulable x y;
+      ajouter_autre_si_annulable y x;
+      !temp @ (v,[x ;y]) :: traite_regles ls
+    | _ -> failwith "binarise abruti"
         
   in
   let regles_bis = 
