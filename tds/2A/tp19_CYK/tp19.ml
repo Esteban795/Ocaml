@@ -185,10 +185,10 @@ let start g = {
 }
   
 let term g =
-  let next_available = ref g.nb_variables in (*On sait combien de variables on a en tout*)
   let tab = Array.make 256 (-1) in
   
-  
+  let next_available = ref g.nb_variables in (*compter le nombre de variables totales*)
+
   (*
   On applique la transfo 'term' du cours. 
   On mappe toutes les lettres qui existent dans notre mot sur de nouvelles variables fraîches   
@@ -338,8 +338,125 @@ let del (g : grammaire) =
     initial = g.initial
   }
 
+
+
+(*
+Transformation 'unit' du cours. 
+On calcule la clôture unitaire de chaque variable, cad, pour chaque variable A,
+les variables B tq A =>* B
+
+Puis, pour chaque règle où B ∈ U(A)
+
+-     B -> x, où x est terminal, on ajoute A -> x
+-     B -> CD, on ajoute A -> CD
+*)
+
+(*
+Pour créer la clôture unitaire, on transforme la grammaire en un graphe où les variables
+sont les sommets, et il y a un arc entre X et Y ssi il y a une règle X -> Y
+*)
+let cree_graphe (g : grammaire) = 
+  let n = g.nb_variables in 
+  let graphe = Array.make n [] in 
+  let traite_regle (v,droite) = 
+    match droite with 
+    |[V v'] -> 
+      graphe.(v) <- v' :: graphe.(v)
+    |_ -> ()
+  in
+  List.iter traite_regle g.regles;
+  graphe
+
+let cloture_transitive graphe = 
+  let n = Array.length graphe in
+  let cloture = Array.make_matrix n n false in 
+  let calcule_ligne v = 
+    let vus = Array.make n false in 
+    let rec explore i = 
+      if not vus.(i) then begin
+        vus.(i) <- true;
+        cloture.(v).(i) <- true;
+        List.iter explore graphe.(v)
+      end 
+    in 
+    explore v
+  in for v = 0 to n - 1 do 
+    calcule_ligne v
+  done;
+  cloture
+
+
+let unit_fun g = 
+  let cloture = cloture_transitive (cree_graphe g) in 
+  let n = g.nb_variables in 
+  let tab_regles = Array.make n [] in 
+
+  (*
+  On liste toutes les règles de la forme v -> ... dans un seul tableau de listes
+  *)
+  let ajouter_regles (v,droite) = 
+    match droite with 
+    |[ V _] -> ()
+    | _ -> tab_regles.(v) <- droite :: tab_regles.(v)
+  in 
+  List.iter ajouter_regles g.regles;
+  let regles_bis = ref [] in 
+  for v = 0 to n - 1 do 
+    for v' = 0 to n -  1 do
+      if cloture.(v).(v') then begin 
+        let f droite = regles_bis := (v,droite) :: !regles_bis in
+        List.iter f tab_regles.(v')
+      end
+    done;
+  done;
+
+  {
+    initial = g.initial;
+    regles = !regles_bis;
+    nb_variables = g.nb_variables
+  } 
+
+let print_cnf (g : cnf) = 
+  let traite_regle_binaire (r : regle_binaire) = 
+    match r with 
+    |(v,x,y) -> Printf.printf "%d ----> %d %d\n" v x y
+  in
+  let traite_regle_unaire (r : regle_unitaire) = 
+    match r with 
+    |(v,c)-> Printf.printf "%d ---> %c\n" v c
+  in 
+  List.iter traite_regle_binaire g.binaires;
+  List.iter traite_regle_unaire g.unitaires
+
+let normalise (g : grammaire) = 
+  let g' = unit_fun (del ( bin ( term ( start g)))) in
+  let unitaires = ref [] in 
+  let binaires = ref [] in 
+  let mot_vide = ref false in 
+  let traite_regle (v,droite) = 
+    match droite with 
+    | [] -> assert (v = g'.initial); mot_vide := true
+    | [T c] -> unitaires := (v,c) :: !unitaires
+    | [V x; V y] -> binaires := (v,x,y) :: !binaires
+    | _ -> failwith "impossible"
+  in 
+  List.iter traite_regle g'.regles;
+
+  {
+    initial = g'.initial;
+    nb_variables = g'.nb_variables;
+    unitaires = !unitaires;
+    binaires = !binaires;
+    mot_vide = !mot_vide;
+  }
+
+
 let _ =
-  let word = "" in 
-  Printf.printf "%s\n" word;
-  if cyk_reconnait g0 word then Printf.printf "Oui\n" else Printf.printf "Non\n"
+  (*let word = "ab" in 
+  Printf.printf "%s\n" word;*)
+  let g2 = normalise g1 in
+  print_cnf g2;
+  (*
+  let g2 = normalise g1 in
+  if cyk_reconnait g2 word then Printf.printf "Oui\n" else Printf.printf "Non\n"*)
         
