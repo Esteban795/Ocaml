@@ -215,7 +215,7 @@ let term g =
     nouvellement créée.
 
   *)
-  let transforme_regle (v,mot) = 
+  let transforme_regle (v, mot) = 
     if List.length mot <= 1 then (v,mot)
     else (v,recup_variables_fraiches mot)
   in 
@@ -262,11 +262,11 @@ let bin g =
   let rec binarise (v,droite) = 
     match droite with 
     |[] | [ _ ] | [_ ; _] -> [(v,droite)] (*on a soit rien, soit une règle qui donne juste A -> X.. On l'éliminera à l'étape UNIT d'après*)
-    | a :: reste ->
+    | a :: b :: reste ->
       let nouvelle_variable = !next_available in 
       let nouvelle_regle = (v,[a ; V nouvelle_variable]) in 
       incr next_available;
-      nouvelle_regle :: (binarise (nouvelle_variable, reste))
+      nouvelle_regle :: (binarise (nouvelle_variable,b :: reste))
   in 
 
   let rec traiter_regles l = 
@@ -275,13 +275,12 @@ let bin g =
     | r :: ls -> binarise r @ traiter_regles ls
   in 
 
-  let regles' = 
-    traiter_regles g.regles in 
-    {
-      nb_variables = !next_available;
-      regles = regles';
-      initial = g.initial
-    }
+  let regles' = traiter_regles g.regles in 
+  {
+    nb_variables = !next_available;
+    regles = regles';
+    initial = g.initial
+  }
 
 (*
 On applique la transfo 'del' du cours. 
@@ -295,7 +294,7 @@ let del (g : grammaire) =
 
   (* On cherche les variables annulables *)
   let annulables = Array.make g.nb_variables false in
-  let switch = ref false in 
+  let switch = ref true in 
   let traite_regle (v,droite) =
     let rec aux dr = 
       match dr with 
@@ -367,6 +366,7 @@ let cree_graphe (g : grammaire) =
   List.iter traite_regle g.regles;
   graphe
 
+
 let cloture_transitive graphe = 
   let n = Array.length graphe in
   let cloture = Array.make_matrix n n false in 
@@ -409,25 +409,15 @@ let unit_fun g =
       end
     done;
   done;
-
   {
     initial = g.initial;
     regles = !regles_bis;
     nb_variables = g.nb_variables
   } 
 
-let print_cnf (g : cnf) = 
-  let traite_regle_binaire (r : regle_binaire) = 
-    match r with 
-    |(v,x,y) -> Printf.printf "%d ----> %d %d\n" v x y
-  in
-  let traite_regle_unaire (r : regle_unitaire) = 
-    match r with 
-    |(v,c)-> Printf.printf "%d ---> %c\n" v c
-  in 
-  List.iter traite_regle_binaire g.binaires;
-  List.iter traite_regle_unaire g.unitaires
-
+(*
+On fait toutes les opérations dans le bon ordre, et on liste correctement les règles unitaires et binaires   
+*)
 let normalise (g : grammaire) = 
   let g' = unit_fun (del ( bin ( term ( start g)))) in
   let unitaires = ref [] in 
@@ -450,13 +440,30 @@ let normalise (g : grammaire) =
     mot_vide = !mot_vide;
   }
 
+(*
+Une fonction pour visualiser les grammaires. 
+J'ai utilisé du ASCII pour avoir des lettres, mais c'est pas forcément la meilleure idée si 
+y a beaucoup de variables   
+*)
+let print_cnf (g : cnf) = 
+  let offset = 65 in
+  let traite_regle_binaire (r : regle_binaire) = 
+    match r with 
+    |(v,x,y) -> Printf.printf "%c ----> %c %c\n" (char_of_int (v + offset)) (char_of_int (x + offset)) (char_of_int (y + offset))
+  in
+  let traite_regle_unaire (r : regle_unitaire) = 
+    match r with 
+    |(v,c)-> Printf.printf "%c ---> %c\n" (char_of_int (v + offset)) c
+  in 
+  List.iter traite_regle_binaire g.binaires;
+  List.iter traite_regle_unaire g.unitaires
+
 
 let _ =
-  (*let word = "ab" in 
-  Printf.printf "%s\n" word;*)
+  let word = Scanf.scanf "%s\n" (fun s -> s) in
+  Printf.printf "%s\n" word;
   let g2 = normalise g1 in
   print_cnf g2;
-  (*
   let g2 = normalise g1 in
-  if cyk_reconnait g2 word then Printf.printf "Oui\n" else Printf.printf "Non\n"*)
+  if cyk_reconnait g2 word then Printf.printf "Oui\n" else Printf.printf "Non\n"
         
