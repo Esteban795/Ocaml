@@ -145,13 +145,58 @@ let rec regex3 s =
     Sum (t,e)
   | _ -> t 
 
-and term s = 
-    let f = factor s in 
-    match peek s with 
-    |None | Some ')' | Some '+' -> f
-    | _ ->
-      let t = term s in 
-      Concat(f,t)
-and factor s = 
-    let l = letter s in 
-    
+  and term s = 
+      let f = factor s in 
+      match peek s with 
+      |None | Some ')' | Some '+' -> f
+      | _ ->
+        let t = term s in 
+        Concat(f,t)
+  and factor s = 
+      let l = lettre s in 
+      quantificateur s l
+  
+  and quantificateur s a = 
+      match peek s with 
+      | Some '*' -> discard s; quantificateur s (Star a)
+      | Some '?' -> discard s; quantificateur s (Maybe a)
+      | _ -> a
+  
+  and lettre s = 
+      match peek s with 
+      |Some '(' -> 
+        discard s;
+        let e = regex3 s in 
+        expect s ')';
+        e
+      |Some c when is_letter c -> discard s; Char c
+      |Some '.' -> discard s; Any
+      | _ -> error s
+
+let parse_regex_3 str = parse regex3 str
+
+
+let rec size expr = 
+  match expr with 
+  | Char _ | Any -> 1
+  |Star e | Maybe e -> 1 + size e
+  |Concat (e,f) | Sum(e,f) -> 1 + size e + size f
+
+let postfix expr = 
+  let len = size expr in 
+  let b = Bytes.make len '/' in
+  let index = ref 0 in 
+  let put c = 
+    Bytes.set b !index c;
+    incr index;
+  in 
+  let rec explore_expr ex = 
+    match ex with
+    | Char c -> put c
+    | Any -> put '.'
+    | Star e -> explore_expr e; put '*'
+    | Maybe e -> explore_expr e; put '?'
+    | Concat (e,f) -> explore_expr e; explore_expr f; put '@'
+    | Sum (e,f) -> explore_expr e; explore_expr f; put '|' 
+  in explore_expr expr;
+  Bytes.to_string b
