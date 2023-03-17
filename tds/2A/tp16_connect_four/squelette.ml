@@ -79,91 +79,91 @@ let tab_valeurs =
     [| 3.; 4.; 5.; 7.; 5.; 4.; 3.|];
   |]
 
-let coup_possibles position = 
-  let lst = [] in 
-  for i = 0 to nb_colonnes - 1 do 
-    if hauteurs.(i) < nb_lignes then i :: lst;
-  done;
-  lst;
+let coups_possibles position = 
+  let rec aux i = 
+    if i = nb_colonnes then []
+    else if position.hauteurs.(i) < nb_lignes then i :: aux (i + 1)
+    else aux (i + 1)
+  in aux 0
 
 let joue position coup = 
-  assert (not (hauteurs.(coup) < nb_lignes));
+  assert (not (position.hauteurs.(coup) < nb_lignes));
   let player = joueur_courant position in
-  let jeton = if player = 1 then -1 else 1 in
+  let jeton = if player = 1. then -1. else 1. in
   position.grille.(position.hauteurs.(coup)).(coup) <- jeton;
-  position.dernier = coup;
-  position.hauteurs.(coup) = position.hauteurs.(coup) + 1;
-  position.nb_joues = position.nb_joues + 1;
+  position.dernier <- coup;
+  position.hauteurs.(coup) <- position.hauteurs.(coup) + 1;
+  position.nb_joues <- position.nb_joues + 1
+
 
 let restore position coup = 
   let last = position.dernier in 
-  position.grille.(position.hauteurs.(last)).(last) <- 0;
+  position.grille.(position.hauteurs.(last)).(last) <- 0.;
   position.dernier <- coup;
-  position.hauteurs.(last) <- position.hauteurs.(last) - 1;
+  position.hauteurs.(last) <- position.hauteurs.(last) - 1
+
 
 let directions = [|(0,1);(1,0);(1,1);(1,-1)|]
 
 let perdant position = 
   let last = position.dernier in 
-  let lgn = position.hauteurs.(last) - 1;
-  let maxi = ref 0;
+  let lgn = position.hauteurs.(last) - 1 in
+  let maxi = ref 0 in
   for i = 0 to 3 do
-    maxi := max maxi (compte_consecutifs position lgn last directions.(i))
+    maxi := max !maxi (compte_consecutifs position lgn last directions.(i))
   done;
-  maxi >= 4;
+  !maxi >= 4
+
 
 let strat_alea pos = 
-  let legal_moves = coups_possibles coup;
+  let legal_moves = coups_possibles pos in
   let tab = Array.of_list legal_moves in 
   let random = Random.int (Array.length tab) in 
-  tab.(random);
+  tab.(random)
+
 
 let strat_humain () =
   Printf.printf "Bonjour humain, où veux-jouer ?";
   read_int ()
 
+
 let joue_partie strat1 strat2 =
   let pos = creer_initiale () in
-  while not (perdant pos) && List.length (coups_possibles pos) > 0 do 
-    let player = joueur_courant pos;
-    let coup = if j = 1 then s2 position else s1 position in 
-    joue pos coup;
+  while not (perdant pos) && (List.length (coups_possibles pos) > 0) do 
+    let player = joueur_courant pos in
+    let coup = ref 0 in 
+    if player = 1. then coup := strat2 pos else coup := strat1 pos;
+    joue pos !coup;
     affiche pos
   done;
-  Printf.printf "Le joueur %d est naze" (joueur_courant pos);
+  Printf.printf "Le joueur %f est naze" (joueur_courant pos)
+
 
 let heuristique_basique pos = 
   let player = joueur_courant pos in 
   let sum = ref 0. in 
   for i = 0 to nb_lignes - 1 do
     for j = 0 to nb_colonnes - 1 do 
-      sum := !sum + tab_valeurs.(i).(j) * pos.grille.(i).(j) 
+      sum := !sum +. tab_valeurs.(i).(j) *. pos.grille.(i).(j) 
     done;
   done;
-  player * !sum
+  player *. !sum
 
 let rec negamax heuristique prof pos = 
-  let player = joueur_courant position in 
-  if perdant position then (-1,-infinity)
-  if prof = 0 then (-1,player,heuristique position);
+  let player = joueur_courant pos in 
+  if perdant pos then (-1,-infinity);
+  if prof = 0 then (-1,player,heuristique pos)
   else 
     let rec eval moves_possibles max_coup max_eval = 
       match moves_possibles with
       |[] -> (max_coup,max_eval)
       |x :: xs ->
-        let dernier = position.dernier in
-        joue position coup;
-        let (a,x) = negamax heuristique (prof - 1) position in 
+        let dernier = pos.dernier in
+        joue pos coup;
+        let (a,x) = negamax heuristique (prof - 1) pos in 
         let res = -x in
-        restore position dernier;
+        restore pos dernier;
         if res = infinity then (coup,infinity)
         else if res >= max_eval then aux xs max_coup res
         else aux xs max_coup max_eval in
-    aux (coups_possibles position) -1 (-infinity)
-
-
-let main () = 
-  Printexc.record_backtrace true;
-  printf "à écrire\n"
-
-(* let () = main () *)
+    aux (coups_possibles pos) -1 (-infinity)

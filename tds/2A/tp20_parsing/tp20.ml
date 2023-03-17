@@ -134,3 +134,24 @@ let rec regex2 (s : state) =
 
 let parse_regex_2 str = 
   parse regex2 str
+
+
+let rec regex3 s = 
+  let t = term s in 
+  match peek s with 
+  |Some '+' -> 
+    discard s;
+    let e = regex3 s in 
+    Sum (t,e)
+  | _ -> t 
+
+and term s = 
+    let f = factor s in 
+    match peek s with 
+    |None | Some ')' | Some '+' -> f
+    | _ ->
+      let t = term s in 
+      Concat(f,t)
+and factor s = 
+    let l = letter s in 
+    
