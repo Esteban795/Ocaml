@@ -5,6 +5,17 @@ type multigraphe = {
   mutable nb_aretes : int
 }
 
+
+let g_ex =
+  [|
+   [| 0; 1; 1; 2; 0 |];
+   [| 1; 0; 1; 1; 0 |];
+   [| 1; 1; 0; 1; 1 |];
+   [| 2; 1; 1; 0; 2 |];
+   [| 0; 0; 1; 2; 0 |];
+  |]
+
+
 let create_partition n =
   Array.init n (fun i -> i)
 
@@ -47,4 +58,37 @@ let contract (g : multigraphe) (s1 : int) (s2 : int) =
     g.adj_m.(i).(s2) <- 0;
     g.adj_m.(s1).(i) <- g.adj_m.(s1).(i) + g.adj_m.(s2).(i);
     g.adj_m.(s2).(i) <- 0
+  done
+
+
+let graph_to_multigraphe g = 
+  let n = Array.length g in
+  let adj_m = Array.init n (fun i -> Array.copy g.(i)) in 
+  let degrees = Array.make n 0 in 
+  let parents = create_partition n in 
+  let nb_edges = ref 0 in 
+  for s1 = 0 to n - 1 do
+    for s2 = 0 to n - 1 do 
+      degrees.(s1) <- degrees.(s1) + g.(s1).(s2);
+      nb_edges := !nb_edges + g.(s1).(s2)
+    done;
   done;
+  {
+    adj_m = adj_m;
+    nb_aretes = !nb_edges;
+    degrees = degrees;
+    parents = parents;
+  }
+
+let krager (g : int array array) = 
+  let n = Array.length g in 
+  let mg = graph_to_multigraphe g in 
+  for i = 0 to n - 3 do 
+    let s1,s2 = random_edge mg in 
+    contract mg s1 s2
+  done;
+  mg
+
+
+let _ = 
+  krager g_ex;
