@@ -1,0 +1,89 @@
+Q1 
+
+SELECT COUNT(*) FROM books 
+WHERE books.original_publication_year >= 2000
+
+
+Q2
+
+SELECT SUM(books.ratings_count) FROM books
+
+SELECT COUNT(*) FROM ratings
+
+Q3 
+
+SELECT books.title FROM books 
+ORDER BY books.average_rating ASC
+LIMIT 10
+
+
+Q4 
+SELECT COUNT(distinct authors) FROM books
+
+Q5 
+SELECT books.title FROM books 
+WHERE books.title LIKE "%girl%"
+
+
+Q6
+SELECT user_id,avg(rating) FROM ratings
+GROUP BY user_id
+ORDER BY avg(rating)
+
+Q7
+
+SELECT authors,SUM(books.ratings_5) FROM books
+GROUP BY authors
+ORDER BY SUM(books.ratings_5) desc
+
+Q8
+
+SELECT original_publication_year, COUNT(*) FROM books
+GROUP BY original_publication_year
+
+Q9
+
+SELECT title, avg(rating) FROM books
+JOIN ratings ON ratings.book_id = books.book_id
+WHERE books.title = "1984"
+
+Q10
+
+SELECT books.authors FROM books 
+GROUP BY authors
+HAVING COUNT(*) >= 3
+
+Q11 
+
+SELECT COUNT(*) FROM ratings
+JOIN books ON ratings.book_id = books.book_id
+WHERE original_publication_year = 2013
+
+
+Q12
+
+SELECT books.title FROM books
+JOIN book_tags ON book_tags.book_id = books.book_id
+JOIN tags ON tags.tag_id = book_tags.tag_id 
+WHERE tags.tag_name = "classics"
+
+Q13 
+
+SELECT books.title, tag_name FROM books
+JOIN book_tags ON book_tags.book_id = books.book_id
+JOIN tags ON tags.tag_id = book_tags.tag_id 
+JOIN 
+	(SELECT book_id as id, max(count) as m FROM book_tags
+	GROUP BY book_id)
+ON id = book_tags.book_id AND count = m
+
+
+Q14
+
+SELECT book_id FROM books 
+except SELECT book_id FROM to_read
+
+Q15
+
+SELECT book_id, title FROM books
+WHERE book_id NOT IN (SELECT book_id FROM to_read);
