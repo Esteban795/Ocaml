@@ -1,3 +1,5 @@
+open Kosaraju
+
 type litteral = 
   |P of int 
   |N of int
@@ -54,24 +56,24 @@ let brute_force f =
 
 
 let graph_of_cnf f = 
-  let n = max_var n in 
-  let g = Array.make (2*(n + 1) ) [] in (*un sommet pour xi et -xi, et on en a n+1 car on va de 0 à n*)
-  in
+  let n = max_var f in 
+  let g = Array.make (2 * (n + 1)) [] in 
   let not_l l = 
     match l with 
-    |N i -> P i 
-    |P i -> N i 
+    | N i -> P i 
+    | P i  -> N i
   in 
-  let position cl = 
-    match cl with 
-    |P i -> 2 * i
-    |N i -> 2 * i + 1 
+  let position c1 = 
+    match c1 with 
+    | P i -> 2 * i
+    | N i -> 2 * i + 1
+  in 
   let ajouter_clause c = 
     let a,b = c in 
-    g.(position (not a)) <- (position b) :: g.(position (not a));
-    g.(position (not b)) <- (position a) :: g.(position (not b))
+    g.(position (not_l a)) <- (position b) :: g.(position (not_l a));
+    g.(position (not_l b)) <- (position a) :: g.(position (not_l b))
   in 
-  list.iter add_clause f;
+  List.iter ajouter_clause f;
   g
 
 exception Unsatisfiable
@@ -90,7 +92,3 @@ let satisfiable f =
     true;
   with 
   |Unsatisfiable -> false
-
-
-
-    
