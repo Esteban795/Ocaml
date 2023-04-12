@@ -55,6 +55,7 @@ let brute_force f =
   |Last -> None
 
 
+
 let graph_of_cnf f = 
   let n = max_var f in 
   let g = Array.make (2 * (n + 1)) [] in 
