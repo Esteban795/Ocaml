@@ -1,89 +1,88 @@
-type vertex = int;;
-type graph = vertex list array;;
+type vertex = int
 
-let transpose g = 
+type graph = vertex list array
+
+let miroir g = 
   let n = Array.length g in 
-  let reversed_g = Array.make n [] in 
+  let mir = Array.make n [] in 
+  let rec add_neighbors s neighbors = 
+    match neighbors with 
+    | [] -> ()
+    | x :: xs ->
+        mir.(x) <- s :: mir.(x);
+        add_neighbors s xs 
+  in
   for i = 0 to n - 1 do 
-    List.iter (fun x-> reversed_g.(x) <- i :: reversed_g.(x)) g.(i);
+    add_neighbors i g.(i) 
   done;
-  reversed_g;;
+  mir 
 
 let post_order g = 
   let n = Array.length g in 
+  let post = ref [] in 
   let seen = Array.make n false in 
-  let lst = ref [] in 
-  let rec explore s = 
-    if not seen.(s) then begin 
-      seen.(s) <- true;
-      List.iter explore g.(s);
-      lst := s :: !lst;
-    end 
-  in explore 0;
-  seen.(0) <- true;
+  let rec explore i = 
+    if not seen.(i) then 
+      begin
+        seen.(i) <- true;
+        List.iter explore g.(i);
+        post := i :: !post
+      end
+  in
   for i = 0 to n - 1 do 
-    if not seen.(i) then explore i;
+    explore i 
   done;
-  !lst;;
+  !post
 
-let accessibles_lists g lst = 
-  let n = Array.length g in 
-  let marque = Array.make n false in 
-  let successors = ref [] in 
-  let accessibles = ref [] in 
-  let rec explore s = 
-    if not marque.(s) then begin 
-      marque.(s) <- true;
-      List.iter explore g.(s);
-      successors := s :: !successors
-    end 
-  in 
-  let rec parcourir_lst l = 
-    match l with
-    |[] -> ()
-    |x :: xs -> 
-      if not marque.(x) then begin
-      successors := [];
-      explore x;
-      accessibles := !successors :: !accessibles;
-      end;
-      parcourir_lst xs;
-  in parcourir_lst lst;
-  !accessibles;;
 
+let accessibles_lists g_mir order = 
+  let n = Array.length g_mir in 
+  let seen = Array.make n false in 
+  let scc_list = ref [] in 
+  let current_scc = ref [] in 
+  let rec explore i = 
+    if not seen.(i) then 
+      begin 
+        seen.(i) <- true;
+        List.iter explore g_mir.(i);
+        current_scc := i :: !current_scc
+      end 
+  in
+  let process i = 
+    if not seen.(i) then 
+      begin 
+        current_scc := [];
+        explore i;
+        scc_list := !current_scc :: !scc_list
+      end 
+  in
+  List.iter process order;
+  !scc_list
 
 let kosaraju g = 
-  let post = post_order g in 
-  let reversed_g = transpose g in 
-  accessibles_lists reversed_g post;;
+  let order = post_order g in 
+  let mir = miroir g in 
+  List.rev (accessibles_lists mir order)
+
 
 let read_graph () = 
-  let n,p = Scanf.scanf "%d %d\n" (fun n p ->(n,p)) in
-  let g = Array.make n [] in
-  for i = 0 to p - 1 do
-    let x,y = Scanf.scanf "%d %d\n" (fun x y ->(x,y)) in
-    g.(x) <- y :: g.(x);
+  let n,p = Scanf.scanf "%d %d\n" (fun x y -> (x,y)) in 
+  let g = Array.make n [] in 
+  for i = 0 to p - 1 do 
+    Scanf.scanf "%d %d\n" (fun x y -> g.(x) <- y :: g.(x))
   done;
-  g;;
+  g
 
-let _ =
+let main () = 
   let g = read_graph () in 
-  let cfc = kosaraju g in 
-  let nb_cfc = List.length cfc in
-  let taille_max = ref 0 in 
-  let rec parcourir lst =
+  let scc = kosaraju g in 
+  let nb_scc = List.length scc in 
+  let maxi = ref 0 in 
+  let rec parcourir lst = 
     match lst with 
     |[] -> ()
-    |l :: l' -> taille_max := max !taille_max (List.length l); parcourir l';
+    | h :: t -> maxi := max !maxi (List.length h); parcourir t
   in 
-  parcourir cfc;
-  Printf.printf "Nombre de CFC : %d\n" nb_cfc;
-  Printf.printf "Taille de la plus grande CFC : %d\n" !taille_max;;
-
-
-
-
-      
-      
-
-
+  parcourir scc;
+  Printf.printf "Nombre de CFC : %d\n" nb_scc;
+  Printf.printf "Taille de la plus grande CFC : %d\n" !maxi;;

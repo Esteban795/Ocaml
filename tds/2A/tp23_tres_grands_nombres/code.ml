@@ -62,6 +62,7 @@ let _ =
 
   
   let t1 = build_ternary_tree (v_k_n 1 10) in 
+  
   let t2 = build_ternary_tree (v_k_n 2 20) in 
   let t3 = build_ternary_tree (v_k_n 32 20) in
   let t4 = build_ternary_tree (v_k_n 61 40) in
